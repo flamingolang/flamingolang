@@ -2,6 +2,10 @@
 
 ---
 
+<div align="center">
+	<img width="25%" src="resources/logo.svg" alt="logo">
+</div>
+
 ### Why does this exist?
 There are no shortage of solutions to the question "what programming language"
 should I learn, but luckily this project is nowhere near adjacent to that question.
