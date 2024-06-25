@@ -1,0 +1,97 @@
+class Pair {
+    // constructor
+    @meta fun init(a, b) {
+        self.a = a
+        self.b = b
+    }
+    // meta functions
+    @meta fun displayObject() = "Pair({self.a}, {self.b})"
+    @meta fun call(pair) = self.add(pair)
+    @meta fun add(pair) = Pair(self, pair)
+    // normal functions
+    fun add(pair) {
+        self.a = self.a + pair.a
+        self.b = self.b + pair.b
+        return self
+    }
+}
+
+val pair1 = Pair(1, 2)
+val pair2 = Pair(3, 4)
+
+fun fold(collection, initial, transform) {
+    var accum = initial
+    for (it in collection) accum = transform.callLetting(accum=accum, it=it)
+    return accum
+}
+
+class HtmlBuilder {
+    @meta fun init() {
+        self.private$html = []
+        self.indent = 0
+    }
+
+    fun addHtml(html, end="\n") = self.private$html.add("    " * self.indent + html + end)
+    fun html(namespace) {
+        self.addHtml("<!DOCTYPE html>")
+        self.addHtml("<html>")
+        self.interpret(namespace)
+        self.addHtml("</html>")
+        return self
+    }
+
+    fun interpret(namespace) {
+        self.indent = self.indent + 1
+        namespace.callLetting(
+            t=fun(text) = self.addHtml("\"{text}\""),
+            body=self.simpleTag("body"), div=self.simpleTag("div"),
+            h1=self.simpleTag("h1"), h2=self.simpleTag("h2"),
+            p=self.simpleTag("p"), a=self.simpleTag("a"))
+        self.indent = self.indent - 1
+    }
+
+    fun simpleTag(name) {
+        fun inner(namespace, cls=null, style=null) {
+            cls = if (cls != null) " class=\"{cls}\"" else ""
+            style = if (style != null) " style=\"{style}\"" else ""
+            self.addHtml("<{name}{cls}{style}>")
+            self.interpret(namespace)
+            self.addHtml("</{name}>")
+            return self
+        }
+        return inner
+    }
+
+    fun build() = fold(self.private$html, "", { accum + it })
+}
+
+class Person {
+    @meta fun init(name, age) {
+        self.name = name
+        self.age = age
+    }
+
+    fun toString() {
+        return "{self.name} ({self.age} years old)"
+    }
+}
+
+val shaun = Person("Shaun", 20)
+
+fun builder(person) = HtmlBuilder().html {
+    body {
+        h1(cls="person-name") { t("{person.name}") }
+        h2 { t("{person.age} years old") }
+        div {
+            p { t("Paragraph 1") }
+            p { a { t("Paragraph 2") } }
+            p {
+                a(style="color: red;") { t("anchored") }
+                t("Paragraph 3")
+            }
+        }
+    }
+}
+
+val b = builder(shaun)
+println(b.build())
