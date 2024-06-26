@@ -8,17 +8,13 @@ import objects.callable.*
 import runtime.throwObject
 
 
-val FlamingoVariables = HashMap<String, FlamingoObject>()
-
-
-val MetaString = String()
 val MetaSentinel = FlamingoObject(FlamingoNullClass)
 
 
 object BuiltinFunMeta : KtFunction(ParameterSpec("meta", listOf("callable"))) {
     override fun accept(callContext: KtCallContext): FlamingoObject? {
         val callable = callContext.getLocalOfType("callable", FlamingoCallableObject::class) ?: return null
-        callable.attributes[MetaString] = AttributeEntry(MetaSentinel, true)
+        callable.attributes["<flag:meta>"] = AttributeEntry(MetaSentinel, true)
         return callable
     }
 }

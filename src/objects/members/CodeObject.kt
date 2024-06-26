@@ -21,7 +21,7 @@ object BuiltinFunCodeObjCallLetting : KtFunction(ParameterSpec("Code.callLetting
     override fun accept(callContext: KtCallContext): FlamingoObject? {
         val self = callContext.getObjectContextOfType(FlamingoCodeObject::class) ?: return null
         val locals = callContext.getLocalOfType("locals", FlamingoDictionaryObject::class) ?: return null
-        return self.callLetting(locals = locals.dictionary)
+        return self.callLetting(initLocals = locals.dictionary)
     }
 }
 

@@ -7,12 +7,11 @@ import objects.callable.ParameterSpec
 import runtime.throwObject
 import kotlin.math.pow
 
-fun simplifyNumber(number: Double): String = if (number % 1.0 == 0.0) number.toInt().toString() else number.toString()
 
 object BuiltinFunNumberDisplayObject : KtFunction(ParameterSpec("Number.displayObject")) {
     override fun accept(callContext: KtCallContext): FlamingoObject? {
         val self = callContext.getObjectContextOfType(FlamingoNumberObject::class) ?: return null
-        return stringOf(simplifyNumber(self.number))
+        return stringOf(self.number.toString())
     }
 }
 

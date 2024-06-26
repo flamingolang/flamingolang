@@ -98,6 +98,7 @@ shaun.bio.add(Post("Creator of flamingo",
 shaun.bio.add(Post("Oblivious",
                    "Shaun spent an hour looking for object caching that he absolutely didn't implement (he did)"))
 
+
 fun builder(person) = HtmlBuilder().doc {
         // header
         tag("title") { t("{person.name} Bio") }
@@ -118,25 +119,8 @@ fun builder(person) = HtmlBuilder().doc {
         t("No rights reserved!")
     }
 
-val b = builder(shaun)
-println(b.build())
+val shaunHTMLBuilder = builder(shaun)
 
-
-fun all(vararg items) {
-    for (item in items) {
-        if (not item) return false
-    }
-    return true
+val utils = import("utils").export {
+    val any = any
 }
-
-fun any(vararg items) {
-    for (item in items) {
-        if (item) return true
-    }
-    return false
-}
-
-val a = 1
-
-a .letIf { it == 1 } { "it == {it}" }
-a .letIf { it == 2 } { "it != {it}" }

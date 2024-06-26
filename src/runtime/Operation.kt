@@ -12,7 +12,6 @@ import objects.base.collections.FlamingoListObject
 import objects.base.collections.FlamingoRangeObject
 import objects.callable.*
 import objects.libraries.MetaSentinel
-import objects.libraries.MetaString
 import runtime.OpCode.*
 
 /**
@@ -203,7 +202,7 @@ open class Operation(val opCode: OpCode, val operands: Array<Any>) {
                         addObject(result)
                     }
 
-                    BinaryOperationType.COMP_IS -> addObject(booleanOf(left == right))
+                    BinaryOperationType.COMP_IS -> { addObject(booleanOf(left == right)) }
                     BinaryOperationType.COMP_IS_NOT -> addObject(booleanOf(left != right))
                 }
             }
@@ -226,7 +225,7 @@ open class Operation(val opCode: OpCode, val operands: Array<Any>) {
                 val obj = popObject()
                 val name = operands[0] as String
                 if (obj.getAttributeOrDefault(
-                        MetaString,
+                        "<flag:meta>",
                         Null
                     ) == MetaSentinel && frame.locals is ClassNameTable
                 ) frame.locals.set("meta\$$name", obj)
@@ -237,7 +236,7 @@ open class Operation(val opCode: OpCode, val operands: Array<Any>) {
                 val obj = popObject()
                 val name = operands[0] as String
                 if (obj.getAttributeOrDefault(
-                        MetaString,
+                        "<flag:meta>",
                         Null
                     ) == MetaSentinel && frame.locals is ClassNameTable
                 ) frame.locals.set("meta\$$name", obj, constant = true)

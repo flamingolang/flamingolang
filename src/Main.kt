@@ -3,11 +3,10 @@ import objects.base.*
 import objects.base.callable.FlamingoBoundMethodClass
 import objects.base.callable.FlamingoFunctionClass
 import objects.base.collections.*
-import objects.callable.*
-import objects.libraries.BuiltinFunDis
-import objects.libraries.BuiltinFunImport
-import objects.libraries.BuiltinFunMeta
-import objects.libraries.BuiltinFunPrintln
+import objects.callable.FlamingoBuiltinFun
+import objects.callable.FlamingoCallableClass
+import objects.callable.FlamingoCodeObjectClass
+import objects.libraries.*
 import objects.members.*
 import runtime.*
 import java.io.File
@@ -50,8 +49,8 @@ fun compile(
 ): OperationalFrame? {
     val compiler = Compiler(filePath = filePath)
     val operations = outFrameOperations ?: ArrayList()
-    compiler.scopeStack.add(Scope("module", operations))
-    val frame = outFrame ?: OperationalFrame("repl", operations, filePath = filePath)
+    compiler.scopeStack.add(Scope(name, operations))
+    val frame = outFrame ?: OperationalFrame(name, operations, filePath = filePath)
     val lexer = Lexer(name, source)
 
 
@@ -236,6 +235,13 @@ fun initFlamingo() {
         it.setClassAttribute("meta\$displayObject", FlamingoBuiltinFun(BuiltinFunNullDisplayObject))
         it.setClassAttribute("meta\$truthy", FlamingoBuiltinFun(BuiltinFunNullTruthy))
     }
+    // module
+    FlamingoModuleClass.let {
+        it.setClassAttribute("meta\$displayObject", FlamingoBuiltinFun(BuiltinFunModDisplayObject))
+
+        it.setClassAttribute("export", FlamingoBuiltinFun(BuiltinFunModExport))
+        it.setClassAttribute("getPath", FlamingoBuiltinFun(BuiltinFunModGetPath))
+    }
 
     builtins = getStandardBuiltins()
 }
@@ -247,6 +253,11 @@ fun main(args: Array<String>) {
     val frame: OperationalFrame
 
     if (args.isNotEmpty()) args[0].let {
+        // val runArgs = args.toList().subList(1, args.size).toMutableList()
+        // runArgs.addFirst("\"%s\"".format(args[0]))
+        // val runArgsCall = runArgs.joinToString(", ")
+
+
         val file = Path.of(it).toFile()
         frame = OperationalFrame("module", operations, filePath = file.absolutePath)
 
@@ -318,4 +329,3 @@ fun main(args: Array<String>) {
         printBlueLine("%sms (%sns)".format(time / 1_000_000, time))
     }
 }
-

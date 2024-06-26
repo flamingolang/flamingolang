@@ -19,7 +19,7 @@ val ZeroDivisionException = TrustedFlamingoClass("ZeroDivisionException", listOf
 // anything that should immediately halt execution to be dealt with
 val FatalError = TrustedFlamingoClass("Fatality", listOf(Throwable))
 // val NotImplementedFatalError = TrustedFlamingoClass("NotImplementedFatality", listOf(FatalError))
-// val ImportFatalError = TrustedFlamingoClass("ImportFatality", listOf(FatalError))
+val ImportFatality = TrustedFlamingoClass("ImportFatality", listOf(FatalError))
 
 // anything where checking is advisory
 val Error = TrustedFlamingoClass("Error", listOf(Throwable))
@@ -28,6 +28,7 @@ val NameError = TrustedFlamingoClass("NameError", listOf(Error))
 val ArgumentError = TrustedFlamingoClass("ArgumentError", listOf(Error))
 val AssignmentError = TrustedFlamingoClass("AssignmentError", listOf(Error))
 val SyntaxError = TrustedFlamingoClass("SyntaxError", listOf(Error))
+
 // val SizeError = TrustedFlamingoClass("SizeError", listOf(Error))
 val ValueError = TrustedFlamingoClass("ValueError", listOf(Error))
 val IndexError = TrustedFlamingoClass("IndexError", listOf(Error))
