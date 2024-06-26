@@ -21,6 +21,7 @@ fun disOperands(operands: Array<Any>): String {
                     operand.positionals?.size ?: 0,
                     operand.defaults?.size ?: 0,
                 )
+
                 is PartialCodeObject -> "(code '%s')".format(operand.scope.name)
                 is CallSpec -> "(%d, %d)".format(operand.arguments, operand.keywords.size)
                 // binary operation types

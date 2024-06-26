@@ -89,8 +89,8 @@ fun printAll(head: Node, vararg nodes: Any?) {
     println("    ".repeat(i) + head::class.simpleName + " {")
     i++
     for (node in nodes) {
-       if (node is Node) printNode(node)
-       else println("    ".repeat(i) + node.toString())
+        if (node is Node) printNode(node)
+        else println("    ".repeat(i) + node.toString())
     }
     i--
     println("    ".repeat(i) + "}")
@@ -106,15 +106,16 @@ fun printNode(node: Node) {
 
         is HangsValue -> {
             printAll(node, node.node)
-            
+
         }
 
         is BuildClass -> {
             printAll(node, node.name, node.packages, node.body)
-            
+
         }
 
-        is BuildFunction -> printAll(node, 
+        is BuildFunction -> printAll(
+            node,
             node.name,
             node.isGenerator,
             node.positionals,
@@ -127,100 +128,101 @@ fun printNode(node: Node) {
 
         is StringLiteral -> {
             printAll(node, node.string)
-            
+
         }
 
         is BuildString -> {
             printAll(node, node.parts)
-            
+
         }
 
         is NumberLiteral -> {
             printAll(node, node.number)
-            
+
         }
 
         is Lookup -> {
             printAll(node, node.name)
-            
+
         }
 
         is CodeSnippet -> {
             printAll(node, node.snippet)
-            
+
         }
 
         is TrueConstant -> {
             printAll(node, "true")
-            
+
         }
 
         is FalseConstant -> {
             printAll(node, "false")
-            
+
         }
 
         is NullConstant -> {
             printAll(node, "null")
-            
+
         }
 
         is ContextObject -> {
             printAll(node, "self")
-            
+
         }
 
         is BuildRange -> {
             printAll(node, node.from, node.to)
-            
+
         }
 
         is ListConstruct -> {
             printAll(node, node.items)
-            
+
         }
 
         is ArrayConstruct -> {
             printAll(node, node.items)
-            
+
         }
 
         is BinaryOperation -> {
             printAll(node, node.type, node.left, node.right)
-            
+
         }
 
         is UnaryOperation -> {
             printAll(node, node.type, node.expression)
-            
+
         }
 
         is BinaryAnd -> {
             printAll(node, node.left, node.right)
-            
+
         }
 
         is BinaryOr -> {
             printAll(node, node.left, node.right)
-            
+
         }
 
         is GetAttribute -> {
             printAll(node, node.name, node.from, node.ifObjectNotNull)
-            
+
         }
 
         is IndexObject -> {
             printAll(node, node.obj, node.index)
-            
+
         }
 
         is CallObject -> {
             printAll(node, node.obj, node.arguments, node.keywords, node.keywordValues)
-            
+
         }
 
-        is CallAttributeIfNotNull -> printAll(node, 
+        is CallAttributeIfNotNull -> printAll(
+            node,
             node.obj,
             node.name,
             node.arguments,
@@ -230,67 +232,67 @@ fun printNode(node: Node) {
 
         is TryCatch -> {
             printAll(node, node.tryExpression, node.catchAs, node.catchBranch)
-            
+
         }
 
         is IfThenElse -> {
             printAll(node, node.condition, node.thenBranch, node.elseBranch)
-            
+
         }
 
         is IfTruthyElse -> {
             printAll(node, node.expression, node.elseExpression)
-            
+
         }
 
         is IfNotNullThen -> {
             printAll(node, node.obj, node.thenBranch)
-            
+
         }
 
         is ForDo -> {
             printAll(node, node.name, node.iterable, node.body)
-            
+
         }
 
         is WhileDo -> {
             printAll(node, node.condition, node.body)
-            
+
         }
 
         is Break -> {
             printAll(node, "break")
-            
+
         }
 
         is Continue -> {
             printAll(node, "continue")
-            
+
         }
 
         is Return -> {
             printAll(node, node.value)
-            
+
         }
 
         is LazyNameAssignment -> {
             printAll(node, node.name, node.expression)
-            
+
         }
 
         is NameAssignment -> {
             printAll(node, node.name, node.expression, node.isConstant)
-            
+
         }
 
         is SetAttribute -> {
             printAll(node, node.obj, node.name, node.value)
-            
+
         }
 
         is SetAtIndex -> {
             printAll(node, node.obj, node.index, node.value)
-            
+
         }
     }
 }

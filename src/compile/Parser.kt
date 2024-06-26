@@ -16,7 +16,7 @@ abstract class AbstractParser(protected val lexer: Lexer) {
     }
 
     fun match(type: TokenType): Boolean {
-        if (current.type === type) {
+        if (current.type == type) {
             advance()
             return true
         }
@@ -25,11 +25,12 @@ abstract class AbstractParser(protected val lexer: Lexer) {
 
     @Throws(CompilerEscape::class)
     open fun cantParse(message: String, token: Token? = null) {
-        throw CompilerEscape(FlamingoCompilerErrorObject(message, token ?: current))
+        val parseToken = token ?: current
+        throw CompilerEscape(FlamingoCompilerErrorObject(message + " (got '%s')".format(parseToken.lexeme), parseToken))
     }
 
     fun peekNext(type: TokenType): Boolean {
-        return next.type === type
+        return next.type == type
     }
 
     fun eat(type: TokenType, message: String): Token {

@@ -16,12 +16,12 @@ class FlamingoCodeObject(
     cls: FlamingoClass = FlamingoCodeObjectClass,
     readOnly: Boolean = true
 ) : FlamingoObject(cls, readOnly) {
-    fun callLetting(locals: Map<String, FlamingoObject>? = null): FlamingoObject? {
-        val frame = OperationalFrame(name, operations, closure = nativeClosure, initLocals = locals)
-        val execution = execute(frame)
+    fun callLetting(initLocals: Map<String, FlamingoObject>? = null): FlamingoObject? {
+        val execution = execute(getFrame(initLocals))
         execution.result?.let { return it }
         return null
     }
+    fun getFrame(initLocals: Map<String, FlamingoObject>? = null) = OperationalFrame(name, operations, closure = nativeClosure, initLocals = initLocals)
 }
 
 object FlamingoCodeObjectClass : TrustedFlamingoClass("Code")

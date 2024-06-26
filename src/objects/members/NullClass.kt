@@ -12,5 +12,5 @@ object BuiltinFunNullDisplayObject : KtFunction(ParameterSpec("Null.displayObjec
 
 
 object BuiltinFunNullTruthy : KtFunction(ParameterSpec("Null.truthy")) {
-    override fun accept(callContext: KtCallContext)= False
+    override fun accept(callContext: KtCallContext) = False
 }

@@ -102,7 +102,7 @@ fun builtinFunctionFrameGlance(frame: BuiltinFunctionFrame): String {
     val glance = StringBuilder("%s(".format(frame.ktFunction.parameters.name))
     val arguments = ArrayList<String>()
     for ((key, entry) in frame.locals.entries) {
-        arguments.add("%s=%s".format(key, entry.value.displaySafe()))
+        arguments.add("%s: %s".format(key, entry.value.cls.name))
     }
     glance.append(arguments.joinToString(", ")).append(')')
     return glance.toString()

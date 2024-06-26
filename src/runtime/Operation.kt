@@ -202,7 +202,7 @@ open class Operation(val opCode: OpCode, val operands: Array<Any>) {
                         addObject(result)
                     }
 
-                    BinaryOperationType.COMP_IS -> addObject(booleanOf(left == right))
+                    BinaryOperationType.COMP_IS -> { addObject(booleanOf(left == right)) }
                     BinaryOperationType.COMP_IS_NOT -> addObject(booleanOf(left != right))
                 }
             }

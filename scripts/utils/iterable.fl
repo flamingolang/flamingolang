@@ -1,0 +1,13 @@
+fun all(vararg items) {
+    for (item in items) {
+        if (not item) return false
+    }
+    return true
+}
+
+fun any(vararg items) {
+    for (item in items) {
+        if (item) return true
+    }
+    return false
+}
