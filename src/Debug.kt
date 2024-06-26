@@ -2,7 +2,7 @@ import compile.BinaryOperationType
 import compile.Jump
 import objects.base.FlamingoObject
 import objects.callable.CallSpec
-import objects.callable.FlamingoCodeObject
+import objects.callable.PartialCodeObject
 import objects.callable.PartialFunction
 import runtime.CompiledOperation
 import runtime.Frame
@@ -21,7 +21,7 @@ fun disOperands(operands: Array<Any>): String {
                     operand.positionals?.size ?: 0,
                     operand.defaults?.size ?: 0,
                 )
-
+                is PartialCodeObject -> "(code '%s')".format(operand.scope.name)
                 is CallSpec -> "(%d, %d)".format(operand.arguments, operand.keywords.size)
                 // binary operation types
                 is BinaryOperationType -> when (operand) {
@@ -52,13 +52,13 @@ fun disOperations(name: String, operations: Collection<Operation>, offset: Int =
     if (offset >= operations.size) return "disassembly of %s is empty".format(name)
     val disassembly = StringBuilder("disassembly of %s:\n".format(name))
     val jumps = HashSet<Int>()
-    val otherCodeDisassemblies = HashSet<FlamingoCodeObject>()
+    val otherCodeDisassemblies = HashSet<PartialCodeObject>()
 
     for ((i, operation) in operations.withIndex()) {
         for (operand in operation.operands) {
             when (operand) {
                 is Jump -> jumps.add(operand.to)
-                is FlamingoCodeObject -> {
+                is PartialCodeObject -> {
                     if (i >= offset) otherCodeDisassemblies.add(operand)
                 }
             }
@@ -68,8 +68,8 @@ fun disOperations(name: String, operations: Collection<Operation>, offset: Int =
     for (otherCodeDisassembly in otherCodeDisassemblies) {
         disassembly.insert(
             0, disOperations(
-                "%s (%s)".format(otherCodeDisassembly.displaySafe(), otherCodeDisassembly.name),
-                otherCodeDisassembly.operations,
+                "%s (%s)".format(otherCodeDisassembly.name, otherCodeDisassembly.scope.name),
+                otherCodeDisassembly.scope.operations,
                 0
             ) + '\n'
         )

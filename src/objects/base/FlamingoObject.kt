@@ -1,6 +1,6 @@
 package objects.base
 
-import objects.callable.FlamingoBoundMethodObject
+import objects.base.callable.FlamingoBoundMethodObject
 import objects.callable.FlamingoCallableObject
 import runtime.throwObject
 import java.util.*

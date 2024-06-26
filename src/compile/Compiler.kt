@@ -226,7 +226,6 @@ open class Compiler(filePath: String? = null) : AbstractCompiler(filePath = file
     override fun visitIfThenElse(condition: Node, thenBranch: Node, elseBranch: Node?) {
         val end = Jump()
 
-
         visit(condition)
         addOperation(OpCode.POP_JUMP_IF_FALSE, end)
         visit(thenBranch)
@@ -235,7 +234,6 @@ open class Compiler(filePath: String? = null) : AbstractCompiler(filePath = file
             val finalEnd = Jump()
             // because there's an else branch, an absolute jump is needed by the main if body to the end of the branch
             addJumpOperation(finalEnd)
-
             // because of else branch, the falsy jumps to the else
             jumpHere(end)
             visit(elseBranch)
@@ -294,7 +292,7 @@ open class Compiler(filePath: String? = null) : AbstractCompiler(filePath = file
     }
 
     override fun visitReturn(value: Node) {
-        if (!scopeStack.peek().isFunction)
+        if (!scopeStack.peek().isFunction) cantCompile("return outside of function")
         visit(value)
         addOperation(OpCode.RETURN_VALUE)
     }

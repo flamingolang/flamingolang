@@ -2,6 +2,7 @@ package objects.libraries
 
 import disOperations
 import objects.base.*
+import objects.base.callable.FlamingoFunctionObject
 import objects.base.collections.FlamingoListObject
 import objects.callable.*
 import runtime.throwObject

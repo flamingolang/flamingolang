@@ -140,5 +140,3 @@ val a = 1
 
 a .letIf { it == 1 } { "it == {it}" }
 a .letIf { it == 2 } { "it != {it}" }
-
-println(--1)
