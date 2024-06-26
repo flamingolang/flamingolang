@@ -6,6 +6,7 @@ import compile.Jump
 import compile.Token
 import compile.UnaryOperationType
 import objects.base.*
+import objects.base.callable.FlamingoFunctionObject
 import objects.base.collections.FlamingoArrayObject
 import objects.base.collections.FlamingoListObject
 import objects.base.collections.FlamingoRangeObject

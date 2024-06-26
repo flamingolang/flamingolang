@@ -32,28 +32,36 @@ class HtmlBuilder {
     }
 
     fun addHtml(html, end="\n") = self.private$html.add("    " * self.indent + html + end)
-    fun html(namespace) {
+    fun doc(header, main, footer) {
         self.addHtml("<!DOCTYPE html>")
-        self.addHtml("<html>")
-        self.interpret(namespace)
-        self.addHtml("</html>")
+        self.simpleTag("html") ({
+            tag("header") { self.interpretInline(header) }
+            tag("main") { self.interpretInline(main) }
+            tag("footer") { self.interpretInline(footer) }
+        })
         return self
     }
 
-    fun interpret(namespace) {
-        self.indent = self.indent + 1
+    fun interpretInline(namespace) =
         namespace.callLetting(
-            t=fun(text) = self.addHtml("\"{text}\""),
+            t=self.addHtml,
+            tag=fun(name, namespace) = self.simpleTag(name)(namespace),
             body=self.simpleTag("body"), div=self.simpleTag("div"),
             h1=self.simpleTag("h1"), h2=self.simpleTag("h2"),
-            p=self.simpleTag("p"), a=self.simpleTag("a"))
+            p=self.simpleTag("p"), a=self.simpleTag("a"),
+            strong=self.simpleTag("strong"), italic=self.simpleTag("italic")
+        )
+
+    fun interpret(namespace) {
+        self.indent = self.indent + 1
+        self.interpretInline(namespace)
         self.indent = self.indent - 1
     }
 
     fun simpleTag(name) {
         fun inner(namespace, cls=null, style=null) {
-            cls = if (cls != null) " class=\"{cls}\"" else ""
-            style = if (style != null) " style=\"{style}\"" else ""
+            cls = if (cls) " class=\"{cls}\"" else ""
+            style = if (style) " style=\"{style}\"" else ""
             self.addHtml("<{name}{cls}{style}>")
             self.interpret(namespace)
             self.addHtml("</{name}>")
@@ -69,6 +77,7 @@ class Person {
     @meta fun init(name, age) {
         self.name = name
         self.age = age
+        self.bio = []
     }
 
     fun toString() {
@@ -76,22 +85,58 @@ class Person {
     }
 }
 
-val shaun = Person("Shaun", 20)
-
-fun builder(person) = HtmlBuilder().html {
-    body {
-        h1(cls="person-name") { t("{person.name}") }
-        h2 { t("{person.age} years old") }
-        div {
-            p { t("Paragraph 1") }
-            p { a { t("Paragraph 2") } }
-            p {
-                a(style="color: red;") { t("anchored") }
-                t("Paragraph 3")
-            }
-        }
+class Post {
+    @meta fun init(title, content) {
+        self.title = title
+        self.content = content
     }
 }
 
+val shaun = Person("Shaun", 20)
+shaun.bio.add(Post("Creator of flamingo",
+                   "Shaun created flamingo lang in kotlin"))
+shaun.bio.add(Post("Oblivious",
+                   "Shaun spent an hour looking for object caching that he absolutely didn't implement (he did)"))
+
+fun builder(person) = HtmlBuilder().doc {
+        // header
+        tag("title") { t("{person.name} Bio") }
+    } {
+        // body
+        h1(cls="person-name") { t("{person.name}") }
+        h2 { t("{person.age} years old") }
+        div(cls="bio-posts-container") {
+            for (bioEntry in person.bio) {
+                div {
+                    p { strong { t("{bioEntry.title}") } }
+                    p { t("{bioEntry.content}") }
+                }
+            }
+        }
+    } {
+        // footer
+        t("No rights reserved!")
+    }
+
 val b = builder(shaun)
 println(b.build())
+
+
+fun all(vararg items) {
+    for (item in items) {
+        if (not item) return false
+    }
+    return true
+}
+
+fun any(vararg items) {
+    for (item in items) {
+        if (item) return true
+    }
+    return false
+}
+
+val a = 1
+
+a .letIf { it == 1 } { "it == {it}" }
+a .letIf { it == 2 } { "it != {it}" }

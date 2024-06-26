@@ -1,5 +1,7 @@
 import compile.*
 import objects.base.*
+import objects.base.callable.FlamingoBoundMethodClass
+import objects.base.callable.FlamingoFunctionClass
 import objects.base.collections.*
 import objects.callable.*
 import objects.libraries.BuiltinFunDis
@@ -51,6 +53,7 @@ fun compile(
     compiler.scopeStack.add(Scope("module", operations))
     val frame = outFrame ?: OperationalFrame("repl", operations, filePath = filePath)
     val lexer = Lexer(name, source)
+
 
     try {
         val parser = Parser(lexer)

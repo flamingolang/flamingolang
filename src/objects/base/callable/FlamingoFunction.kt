@@ -1,8 +1,9 @@
-package objects.callable
+package objects.base.callable
 
 import objects.base.FlamingoClass
 import objects.base.FlamingoObject
 import objects.base.TrustedFlamingoClass
+import objects.callable.*
 import runtime.Frame
 import runtime.OperationalFrame
 
@@ -24,7 +25,10 @@ class FlamingoFunctionObject(
         return frame
     }
 
-    override fun performCall(callContext: KtCallContext): FlamingoObject? = runtime.call()
+    override fun performCall(callContext: KtCallContext): FlamingoObject? {
+        val result = runtime.call()
+        return result
+    }
 }
 
 object FlamingoFunctionClass : TrustedFlamingoClass("Function", listOf(FlamingoCallableClass))
