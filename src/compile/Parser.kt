@@ -688,7 +688,9 @@ class Parser(lexer: Lexer) : AbstractParser(lexer) {
             TokenType.TOKEN_STRING -> parseString(atom)
             TokenType.TOKEN_RAW_STRING -> StringLiteral(atom, atom.lexeme.substring(2, atom.lexeme.length - 1))
 
-            TokenType.TOKEN_NUMBER -> NumberLiteral(atom, atom.lexeme.toDouble())
+            TokenType.TOKEN_NUMBER -> {
+                NumberLiteral(atom, atom.lexeme.toDouble())
+            }
 
             TokenType.TOKEN_FALSE -> FalseConstant(atom)
             TokenType.TOKEN_FUN, TokenType.TOKEN_GEN -> {

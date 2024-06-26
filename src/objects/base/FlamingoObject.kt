@@ -27,7 +27,7 @@ open class FlamingoObject(val cls: FlamingoClass, private val readOnly: Boolean 
     private fun bindSomeCallableAttribute(callable: FlamingoObject): FlamingoObject {
         if (callable is FlamingoBoundMethodObject) return callable
         else if (callable is FlamingoCallableObject<*> && callable.getAttributeOrNull(
-                "flag:static",
+                "<flag:static>",
                 aroCheck = false
             ) == null
         ) return FlamingoBoundMethodObject(this, callable)
