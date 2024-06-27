@@ -2,7 +2,7 @@ package compile
 
 import objects.base.*
 import objects.callable.CallSpec
-import objects.callable.PartialCodeObject
+import objects.callable.PartialCodeObj
 import objects.callable.PartialFunction
 import runtime.CompiledOperation
 import runtime.OpCode
@@ -38,7 +38,7 @@ abstract class AbstractCompiler(val filePath: String? = null) : AbstractNodeVisi
 
 open class Compiler(filePath: String? = null) : AbstractCompiler(filePath = filePath) {
     private fun cantCompile(message: String, token: Token? = null) {
-        throw CompilerEscape(FlamingoCompilerErrorObject(message, token ?: currentToken!!))
+        throw CompilerEscape(FlCompilerErrorObj(message, token ?: currentToken!!))
     }
 
     private fun addJumpOperation(to: Jump) {
@@ -61,7 +61,7 @@ open class Compiler(filePath: String? = null) : AbstractCompiler(filePath = file
         visitAll(packages)
         addScope(name)
         visit(body)
-        addOperation(OpCode.BUILD_CODE, PartialCodeObject(name, scopeStack.pop(), filePath = filePath))
+        addOperation(OpCode.BUILD_CODE, PartialCodeObj(name, scopeStack.pop(), filePath = filePath))
         addOperation(OpCode.BUILD_CLASS, name, packages.size)
     }
 
@@ -78,7 +78,7 @@ open class Compiler(filePath: String? = null) : AbstractCompiler(filePath = file
         visitAll(defaultValues)
         addScope(name, isFunction = true)
         visit(body)
-        addOperation(OpCode.BUILD_CODE, PartialCodeObject(name, scopeStack.pop(), filePath = filePath))
+        addOperation(OpCode.BUILD_CODE, PartialCodeObj(name, scopeStack.pop(), filePath = filePath))
         addOperation(
             OpCode.BUILD_FUNCTION, PartialFunction(isGenerator, positionals, defaults, varargs, varkwargs)
         )
@@ -105,7 +105,7 @@ open class Compiler(filePath: String? = null) : AbstractCompiler(filePath = file
         addScope("anonymous-lambda", isFunction = true)
         visit(snippet)
         addOperation(
-            OpCode.BUILD_CODE, PartialCodeObject("anonymous-lambda", scopeStack.pop(), filePath = filePath)
+            OpCode.BUILD_CODE, PartialCodeObj("anonymous-lambda", scopeStack.pop(), filePath = filePath)
         )
     }
 
@@ -121,7 +121,7 @@ open class Compiler(filePath: String? = null) : AbstractCompiler(filePath = file
         addOperation(OpCode.LOAD_CONST, Null)
     }
 
-    override fun visitContextObject() {
+    override fun visitContextObj() {
         addOperation(OpCode.LOAD_CTX)
     }
 
@@ -169,21 +169,21 @@ open class Compiler(filePath: String? = null) : AbstractCompiler(filePath = file
         jumpHere(end)
     }
 
-    override fun visitGetAttribute(name: String, from: Node, ifObjectNotNull: Boolean) {
+    override fun visitGetAttribute(name: String, from: Node, ifObjNotNull: Boolean) {
         visit(from)
         val end = Jump()
-        if (ifObjectNotNull) addOperation(OpCode.JUMP_IF_NULL, end)
+        if (ifObjNotNull) addOperation(OpCode.JUMP_IF_NULL, end)
         addOperation(OpCode.GET_ATTR, name)
         jumpHere(end)
     }
 
-    override fun visitIndexObject(obj: Node, index: Node) {
+    override fun visitIndexObj(obj: Node, index: Node) {
         visit(index)
         visit(obj)
         addOperation(OpCode.INDEX_TOP)
     }
 
-    override fun visitCallObject(
+    override fun visitCallObj(
         obj: Node, arguments: MutableList<Node>, keywords: List<String>, keywordValues: List<Node>
     ) {
         visit(obj)

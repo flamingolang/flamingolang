@@ -1,6 +1,6 @@
 package compile
 
-import objects.base.FlamingoCompilerErrorObject
+import objects.base.FlCompilerErrorObj
 
 abstract class AbstractParser(protected val lexer: Lexer) {
     protected var next: Token
@@ -26,7 +26,7 @@ abstract class AbstractParser(protected val lexer: Lexer) {
     @Throws(CompilerEscape::class)
     open fun cantParse(message: String, token: Token? = null) {
         val parseToken = token ?: current
-        throw CompilerEscape(FlamingoCompilerErrorObject(message + " (got '%s')".format(parseToken.lexeme), parseToken))
+        throw CompilerEscape(FlCompilerErrorObj(message + " (got '%s')".format(parseToken.lexeme), parseToken))
     }
 
     fun peekNext(type: TokenType): Boolean {
@@ -160,11 +160,11 @@ class Parser(lexer: Lexer) : AbstractParser(lexer) {
 
     fun unpackDecorators(decorators: MutableList<Node>, function: BuildFunction): NameAssignment {
         val firstDecorator = decorators.removeLast()
-        var decorated = CallObject(firstDecorator.token, firstDecorator, mutableListOf(function), listOf(), listOf())
+        var decorated = CallObj(firstDecorator.token, firstDecorator, mutableListOf(function), listOf(), listOf())
 
         while (decorators.isNotEmpty()) {
             val nextDecorator = decorators.removeLast()
-            decorated = CallObject(nextDecorator.token, nextDecorator, mutableListOf(decorated), listOf(), listOf())
+            decorated = CallObj(nextDecorator.token, nextDecorator, mutableListOf(decorated), listOf(), listOf())
         }
 
         return NameAssignment(firstDecorator.token, function.name, decorated, false)
@@ -347,7 +347,7 @@ class Parser(lexer: Lexer) : AbstractParser(lexer) {
             when (expression) {
                 is Lookup -> return NameAssignment(post, expression.name, expression(), false)
                 is GetAttribute -> return SetAttribute(post, expression.from, expression.name, expression())
-                is IndexObject -> return SetAtIndex(post, expression.obj, expression.index, expression())
+                is IndexObj -> return SetAtIndex(post, expression.obj, expression.index, expression())
                 else -> cantParse("expression is not assignable")
             }
         } else if (match(TokenType.TOKEN_DOT_DOT)) {
@@ -516,13 +516,13 @@ class Parser(lexer: Lexer) : AbstractParser(lexer) {
                         listOf()
                     )
                 } else {
-                    left = GetAttribute(operator, name, left, ifObjectNotNull = true)
+                    left = GetAttribute(operator, name, left, ifObjNotNull = true)
                 }
             } else if (current.type == TokenType.TOKEN_LEFT_BRACE) {
-                if (left is CallObject) {
+                if (left is CallObj) {
                     left.arguments.add(codeSnippet(operator))
                 } else {
-                    left = CallObject(operator, left, arrayListOf(codeSnippet(operator)), listOf(), listOf())
+                    left = CallObj(operator, left, arrayListOf(codeSnippet(operator)), listOf(), listOf())
                 }
             } else if (match(TokenType.TOKEN_LEFT_PAREN)) {
                 val arguments = ArrayList<Node>()
@@ -537,12 +537,12 @@ class Parser(lexer: Lexer) : AbstractParser(lexer) {
 
                 eat(TokenType.TOKEN_RIGHT_PAREN, "object call arguments must be enclosed with ')'")
 
-                left = CallObject(operator, left, arguments, keywords, keywordValues)
+                left = CallObj(operator, left, arguments, keywords, keywordValues)
 
             } else if (match(TokenType.TOKEN_LEFT_BRACKET)) {
                 val index = expression()
                 eat(TokenType.TOKEN_RIGHT_BRACKET, "object index must be enclosed with ']'")
-                left = IndexObject(operator, left, index)
+                left = IndexObj(operator, left, index)
             } else break
         }
 
@@ -690,7 +690,11 @@ class Parser(lexer: Lexer) : AbstractParser(lexer) {
             TokenType.TOKEN_RAW_STRING -> StringLiteral(atom, atom.lexeme.substring(2, atom.lexeme.length - 1))
 
             TokenType.TOKEN_NUMBER -> {
-                NumberLiteral(atom, atom.lexeme.toDouble())
+                val number = atom.lexeme.toDouble()
+                if (number > 999999999999999.0) {
+                    cantParse("number (%s) is too large".format(number), atom)
+                }
+                NumberLiteral(atom, number)
             }
 
             TokenType.TOKEN_FALSE -> FalseConstant(atom)
@@ -713,7 +717,7 @@ class Parser(lexer: Lexer) : AbstractParser(lexer) {
 
             TokenType.TOKEN_TRUE -> TrueConstant(atom)
 
-            TokenType.TOKEN_SELF -> ContextObject(atom)
+            TokenType.TOKEN_SELF -> ContextObj(atom)
 
             TokenType.TOKEN_IF -> {
 
@@ -734,7 +738,7 @@ class Parser(lexer: Lexer) : AbstractParser(lexer) {
                 val callExpression = expression()
                 val callArgument = expression()
 
-                CallObject(atom, callExpression, mutableListOf(callArgument), listOf(), listOf())
+                CallObj(atom, callExpression, mutableListOf(callArgument), listOf(), listOf())
             }
 
             else -> {

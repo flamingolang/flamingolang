@@ -1,11 +1,11 @@
 package objects.base
 
-class FlamingoStringObject(val string: String, cls: FlamingoClass = FlamingoStringClass, readOnly: Boolean = true) :
-    FlamingoObject(cls, readOnly = readOnly)
+class FlStringObj(val string: String, cls: FlClass = FlStringClass, readOnly: Boolean = true) :
+    FlObject(cls, readOnly = readOnly)
 
-val FlamingoStringClass = TrustedFlamingoClass("String")
+val FlStringClass = TrustedFlClass("String")
 
 
-fun stringOf(string: String): FlamingoStringObject {
-    return FlamingoStringObject(string)
+fun stringOf(string: String): FlStringObj {
+    return FlStringObj(string)
 }

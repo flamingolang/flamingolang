@@ -1,14 +1,19 @@
 package objects.base.collections
 
-import objects.base.FlamingoClass
-import objects.base.FlamingoObject
-import objects.base.TrustedFlamingoClass
+import objects.base.FlClass
+import objects.base.FlObject
+import objects.base.TrustedFlClass
 import java.util.*
 
-class FlamingoDictionaryObject(
-    val dictionary: SequencedMap<String, FlamingoObject>,
-    cls: FlamingoClass = FlamingoDictionaryClass,
+class FlDictionaryObj(
+    val dictionary: SequencedMap<String, FlObject>,
+    cls: FlClass = FlDictionaryClass,
     readOnly: Boolean = true
-) : FlamingoObject(cls, readOnly = readOnly)
+) : FlObject(cls, readOnly = readOnly) {
+    override fun getAttributeOrNull(name: String, aroCheck: Boolean): FlObject? {
+        dictionary[name] ?. let { return it }
+        return super.getAttributeOrNull(name, aroCheck)
+    }
+}
 
-val FlamingoDictionaryClass = TrustedFlamingoClass("Dictionary")
+val FlDictionaryClass = TrustedFlClass("Dictionary")

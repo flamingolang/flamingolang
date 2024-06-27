@@ -1,11 +1,11 @@
 package objects.base
 
-class FlamingoBooleanObject(val boolean: Boolean, cls: FlamingoClass = FlamingoBooleanClass, readOnly: Boolean = true) :
-    FlamingoObject(cls, readOnly = readOnly)
+class FlBooleanObj(val boolean: Boolean, cls: FlClass = FlBooleanClass, readOnly: Boolean = true) :
+    FlObject(cls, readOnly = readOnly)
 
-val FlamingoBooleanClass = TrustedFlamingoClass("Boolean")
+val FlBooleanClass = TrustedFlClass("Boolean")
 
-val True = FlamingoBooleanObject(true)
-val False = FlamingoBooleanObject(false)
+val True = FlBooleanObj(true)
+val False = FlBooleanObj(false)
 
-fun booleanOf(boolean: Boolean): FlamingoBooleanObject = if (boolean) True else False
+fun booleanOf(boolean: Boolean): FlBooleanObj = if (boolean) True else False

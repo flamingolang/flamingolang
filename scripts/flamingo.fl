@@ -1,1 +1,32 @@
-val utils = @import "utils", flamingo2 = @import "flamingo2"
+class ListReplacement(List) {
+    @meta fun init(vararg items) {
+        self.items = items
+    }
+
+    @meta fun displayObj() = "ListReplacement[{self.items.size()}]"
+    @meta fun isIterable() = true
+    @meta fun iter() = ListRepIter(self)
+
+}
+
+class ListRepIter {
+    @meta fun init(listReplacement) {
+        self.listReplacement = listReplacement
+        self.pos = 0
+    }
+
+    fun hasNextObj() = self.pos < self.listReplacement.items.size()
+    fun nextObj() {
+        item = self.listReplacement.items[self.pos]
+        pos = self.pos
+        self.pos = self.pos + 1
+        return (self.pos)
+    }
+}
+
+
+val l = filter(ListReplacement, [1, 2, 3, 4, 5, 6, 6]) { it.isEven() }
+
+val testClass = classOf("testClass", arrayOf(), dictOf(meta$init=functionOf("init", ("object", ), dictOf(), { self.object = object })))
+
+class TestClass { @meta fun init(object) { self.object = object } }

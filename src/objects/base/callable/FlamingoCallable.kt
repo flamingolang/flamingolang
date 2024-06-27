@@ -2,11 +2,11 @@ package objects.callable
 
 import compile.Scope
 import objects.base.ArgumentError
-import objects.base.FlamingoClass
-import objects.base.FlamingoObject
-import objects.base.TrustedFlamingoClass
-import objects.base.collections.FlamingoDictionaryObject
-import objects.base.collections.FlamingoListObject
+import objects.base.FlClass
+import objects.base.FlObject
+import objects.base.TrustedFlClass
+import objects.base.collections.FlDictionaryObj
+import objects.base.collections.FlListObj
 import runtime.*
 import java.util.*
 import kotlin.reflect.KClass
@@ -20,7 +20,7 @@ data class PartialFunction(
 )
 
 data class CallSpec(val arguments: Int, val keywords: List<String>)
-data class PartialCodeObject(
+data class PartialCodeObj(
     val name: String,
     val scope: Scope,
     val filePath: String? = null
@@ -29,17 +29,17 @@ data class PartialCodeObject(
 data class ParameterSpec(
     val name: String,
     val positionals: Collection<String>? = null,
-    val defaults: HashMap<String, FlamingoObject>? = null,
+    val defaults: HashMap<String, FlObject>? = null,
     val varargs: String? = null,
     val varkwargs: String? = null
 ) {
     fun parseLocals(
-        arguments: Collection<FlamingoObject>, keywords: SequencedMap<String, FlamingoObject>
-    ): HashMap<String, FlamingoObject>? {
+        arguments: Collection<FlObject>, keywords: SequencedMap<String, FlObject>
+    ): HashMap<String, FlObject>? {
         val positionalsSize = positionals?.size ?: 0
 
         if (arguments.size < positionalsSize) {
-            throwObject(
+            throwObj(
                 "$name given only ${arguments.size} positional arguments, but expected $positionalsSize", ArgumentError
             )
             return null
@@ -47,30 +47,30 @@ data class ParameterSpec(
 
         // now check if varargs is going to affect it
         if (varargs == null && arguments.size > positionalsSize) {
-            throwObject(
+            throwObj(
                 "$name given too many positional arguments (${arguments.size}), but expected only $positionalsSize",
                 ArgumentError
             )
             return null
         }
 
-        val locals = HashMap<String, FlamingoObject>()
+        val locals = HashMap<String, FlObject>()
         if (defaults != null) locals.putAll(defaults)
 
         // get defaults out of the way
 
-        val variadicKeywords = if (varkwargs != null) LinkedHashMap<String, FlamingoObject>() else null
+        val variadicKeywords = if (varkwargs != null) LinkedHashMap<String, FlObject>() else null
 
         for ((key, value) in keywords) {
             if (locals[key] != null) locals[key] = value
             else if (variadicKeywords != null) variadicKeywords[key] = value
             else {
-                throwObject("$name has keyword argument $key", ArgumentError)
+                throwObj("$name has keyword argument $key", ArgumentError)
                 return null
             }
         }
 
-        val variadicArguments = if (varargs != null) mutableListOf<FlamingoObject>() else null
+        val variadicArguments = if (varargs != null) mutableListOf<FlObject>() else null
 
         for ((i, argument) in arguments.withIndex()) {
             if (i < positionalsSize) locals[positionals!!.elementAt(i)] = argument
@@ -78,8 +78,8 @@ data class ParameterSpec(
         }
 
 
-        if (variadicArguments != null) locals[varargs!!] = FlamingoListObject(variadicArguments)
-        if (variadicKeywords != null) locals[varkwargs!!] = FlamingoDictionaryObject(variadicKeywords)
+        if (variadicArguments != null) locals[varargs!!] = FlListObj(variadicArguments)
+        if (variadicKeywords != null) locals[varkwargs!!] = FlDictionaryObj(variadicKeywords)
 
         return locals
     }
@@ -87,32 +87,32 @@ data class ParameterSpec(
 
 
 class KtCallContext(val frame: Frame) {
-    fun getLocal(name: String): FlamingoObject? = frame.locals.get(name)
+    fun getLocal(name: String): FlObject? = frame.locals.get(name)
 
-    fun <T : FlamingoObject> getLocalOfType(name: String, type: KClass<T>): T? {
+    fun <T : FlObject> getLocalOfType(name: String, type: KClass<T>): T? {
         val local = getLocal(name) ?: return null
         return local.assertCast(name, type)
     }
 
-    fun getObjectContext() = frame.locals.getContextObject()
-    fun <T : FlamingoObject> getObjectContextOfType(type: KClass<T>): T? {
-        val self = getObjectContext() ?: return null
+    fun getObjContext() = frame.locals.getContextObj()
+    fun <T : FlObject> getObjContextOfType(type: KClass<T>): T? {
+        val self = getObjContext() ?: return null
         return self.assertCast("self", type)
     }
 }
 
 abstract class KtFunction(val parameters: ParameterSpec) {
-    abstract fun accept(callContext: KtCallContext): FlamingoObject?
+    abstract fun accept(callContext: KtCallContext): FlObject?
 }
 
-abstract class FlamingoCallableObject<T : Frame>(
-    val parameters: ParameterSpec, cls: FlamingoClass, readOnly: Boolean = true
-) : FlamingoObject(cls, readOnly = readOnly) {
-    abstract fun makeFrame(locals: HashMap<String, FlamingoObject>): T
-    abstract fun performCall(callContext: KtCallContext): FlamingoObject?
+abstract class FlCallableObj<T : Frame>(
+    val parameters: ParameterSpec, cls: FlClass, readOnly: Boolean = true
+) : FlObject(cls, readOnly = readOnly) {
+    abstract fun makeFrame(locals: HashMap<String, FlObject>): T
+    abstract fun performCall(callContext: KtCallContext): FlObject?
     fun handleCall(
-        arguments: Collection<FlamingoObject>, keywords: SequencedMap<String, FlamingoObject>
-    ): FlamingoObject? {
+        arguments: Collection<FlObject>, keywords: SequencedMap<String, FlObject>
+    ): FlObject? {
         val locals = parameters.parseLocals(arguments, keywords) ?: return null
         val frame = makeFrame(locals)
         addCall(frame)
@@ -122,12 +122,12 @@ abstract class FlamingoCallableObject<T : Frame>(
     }
 }
 
-object FlamingoCallableClass : TrustedFlamingoClass("Callable")
+object FlCallableClass : TrustedFlClass("Callable")
 
-class FlamingoBuiltinFun(
-    val callable: KtFunction, cls: FlamingoClass = FlamingoBuiltinClass, readOnly: Boolean = true
-) : FlamingoCallableObject<BuiltinFunctionFrame>(callable.parameters, cls, readOnly = readOnly) {
-    override fun makeFrame(locals: HashMap<String, FlamingoObject>): BuiltinFunctionFrame {
+class FlBuiltinObj(
+    val callable: KtFunction, cls: FlClass = FlBuiltinClass, readOnly: Boolean = true
+) : FlCallableObj<BuiltinFunctionFrame>(callable.parameters, cls, readOnly = readOnly) {
+    override fun makeFrame(locals: HashMap<String, FlObject>): BuiltinFunctionFrame {
         val frame = BuiltinFunctionFrame(callable.parameters.name, callable)
         frame.locals.setAll(locals)
         return frame
@@ -136,4 +136,4 @@ class FlamingoBuiltinFun(
     override fun performCall(callContext: KtCallContext) = callable.accept(callContext)
 }
 
-object FlamingoBuiltinClass : TrustedFlamingoClass("Builtin", listOf(FlamingoCallableClass))
+object FlBuiltinClass : TrustedFlClass("Builtin", listOf(FlCallableClass))

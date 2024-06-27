@@ -4,40 +4,40 @@ import objects.base.*
 import objects.callable.KtCallContext
 import objects.callable.KtFunction
 import objects.callable.ParameterSpec
-import runtime.throwObject
+import runtime.throwObj
 
-open class FlamingoGenericIteratorObject(
-    val iterator: Iterator<FlamingoObject>,
-    cls: FlamingoClass = FlamingoGenericIteratorClass,
+open class FlGenericIteratorObj(
+    val iterator: Iterator<FlObject>,
+    cls: FlClass = FlGenericIteratorClass,
     readOnly: Boolean = true
-) : FlamingoObject(cls, readOnly = readOnly) {
-    open fun hasNextObject(): Boolean? = iterator.hasNext()
-    open fun nextObject(): FlamingoObject? {
+) : FlObject(cls, readOnly = readOnly) {
+    open fun hasNextObj(): Boolean? = iterator.hasNext()
+    open fun nextObj(): FlObject? {
         if (iterator.hasNext()) return iterator.next()
         else {
-            throwObject("%s type object has no next to get".format(cls.name), IterationException)
+            throwObj("%s type object has no next to get".format(cls.name), IterationException)
             return null
         }
     }
 }
 
 
-val FlamingoGenericIteratorClass = TrustedFlamingoClass("iterator")
+val FlGenericIteratorClass = TrustedFlClass("iterator")
 
 
-object BuiltinFunGenIterHasNextObject : KtFunction(ParameterSpec("hasNextObject")) {
-    override fun accept(callContext: KtCallContext): FlamingoObject? {
-        val self = callContext.getObjectContextOfType(FlamingoGenericIteratorObject::class) ?: return null
-        val hasNext = self.hasNextObject() ?: return null
+object BuiltinFunGenIterHasNextObj : KtFunction(ParameterSpec("hasNextObj")) {
+    override fun accept(callContext: KtCallContext): FlObject? {
+        val self = callContext.getObjContextOfType(FlGenericIteratorObj::class) ?: return null
+        val hasNext = self.hasNextObj() ?: return null
         return booleanOf(hasNext)
     }
 }
 
 
-object BuiltinFunGenIterNextObject : KtFunction(ParameterSpec("nextObject")) {
-    override fun accept(callContext: KtCallContext): FlamingoObject? {
-        val self = callContext.getObjectContextOfType(FlamingoGenericIteratorObject::class) ?: return null
-        val nextObject = self.nextObject() ?: return null
-        return nextObject
+object BuiltinFunGenIterNextObj : KtFunction(ParameterSpec("nextObj")) {
+    override fun accept(callContext: KtCallContext): FlObject? {
+        val self = callContext.getObjContextOfType(FlGenericIteratorObj::class) ?: return null
+        val nextObj = self.nextObj() ?: return null
+        return nextObj
     }
 }

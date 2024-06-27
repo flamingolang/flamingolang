@@ -4,7 +4,7 @@ import objects.base.*
 import java.util.*
 
 val vmCallStack = Stack<Frame>()
-var vmThrown: FlamingoThrowableObject? = null
+var vmThrown: FlThrowableObj? = null
 
 /**
  * @return the top most frame on the call stack
@@ -28,48 +28,53 @@ fun popCall(): Frame {
 /**
  * @return the top most object on the topmost frame's object stack
  */
-fun topObject(): FlamingoObject = vmCallStack.peek().stack.peek()
+fun topObj(): FlObject = vmCallStack.peek().stack.peek()
 
 /**
  * @param obj the object to add to the topmost frame's object stack
  */
-fun addObject(obj: FlamingoObject) {
+fun addObj(obj: FlObject) {
     vmCallStack.peek().stack.push(obj)
 }
 
 /**
  * @return the topmost object on the topmost frame's object stack
  */
-fun popObject(): FlamingoObject = vmCallStack.peek().stack.pop()
+fun popObj(): FlObject = vmCallStack.peek().stack.pop()
 
-val vmThrownStack = Stack<FlamingoThrowableObject>()
+val vmThrownStack = Stack<FlThrowableObj>()
 
-fun throwObject(throwable: FlamingoThrowableObject) {
+fun throwObj(throwable: FlThrowableObj) {
     vmThrown = throwable
     vmThrownStack.push(throwable)
 }
 
-fun throwObject(message: String, cls: FlamingoClass) =
-    throwObject(FlamingoThrowableObject(message, cls))
+fun throwObj(message: String, cls: FlClass) =
+    throwObj(FlThrowableObj(message, cls))
 
 
 /**
  * Completes all instructions on the current frame including when frames are pushed to the stack,
  * when the initial frame has finished, it returns the value.
  * This function should not be called when there are no frames on the call stack.
- * This function should not be used and instead it is advised to use execute
+ * This function should not be used. instead it is advised to use execute
  *
  * @see execute
  */
-fun call(): FlamingoObject? {
+fun call(): FlObject? {
     if (vmCallStack.isEmpty()) {
-        throwObject("Call to vm tried to execute without any frames on the call stack", FatalError)
+        throwObj("Call to vm tried to execute without any frames on the call stack", FatalError)
         return null
     }
 
     val frame = topCall()
 
     while (true) {
+        if (vmCallStack.size > 1000) {
+            throwObj("Call stack exceeded maximum recursion limit (1000)", StackOverflowFatality)
+            return null
+        }
+
         val currFrame = topCall()
 
         if (vmThrown != null) {
@@ -81,10 +86,10 @@ fun call(): FlamingoObject? {
         if (!currFrame.hasFinished()) {
             if (currFrame is OperationalFrame && currFrame.matchOperation(OpCode.RETURN_VALUE)) {
                 currFrame.ip++
-                val returnValue = popObject()
+                val returnValue = popObj()
                 if (currFrame == frame) return returnValue
                 popCall()
-                addObject(returnValue)
+                addObj(returnValue)
             } else {
                 currFrame.next()
             }
@@ -93,6 +98,7 @@ fun call(): FlamingoObject? {
                 return Null
             } else {
                 popCall()
+                addObj(Null)
             }
         }
     }
@@ -108,7 +114,7 @@ fun builtinFunctionFrameGlance(frame: BuiltinFunctionFrame): String {
     return glance.toString()
 }
 
-fun printError(error: FlamingoThrowableObject, stackSnapshot: Collection<Frame>) {
+fun printError(error: FlThrowableObj, stackSnapshot: Collection<Frame>) {
     if (stackSnapshot.isNotEmpty()) {
         printRedLine("==( Callstack, most recent call last )==")
         for (frame in stackSnapshot) {
@@ -129,8 +135,8 @@ fun printError(error: FlamingoThrowableObject, stackSnapshot: Collection<Frame>)
                     continue
                 }
             } else if (frame is BuiltinFunctionFrame) {
-                val contextObject = frame.locals.context
-                val context = if (contextObject != null) " of %s".format(contextObject.cls.name) else ""
+                val contextObj = frame.locals.context
+                val context = if (contextObj != null) " of %s".format(contextObj.cls.name) else ""
                 printRedLine("    in internal %s%s".format(builtinFunctionFrameGlance(frame), context))
                 printRedLine("        ...")
                 continue
@@ -140,7 +146,7 @@ fun printError(error: FlamingoThrowableObject, stackSnapshot: Collection<Frame>)
         }
     }
     printRedLine("==( %s : %s )==".format(error.cls.name, error.message))
-    if (error is FlamingoCompilerErrorObject) {
+    if (error is FlCompilerErrorObj) {
         printRedLine(
             "    in \"%s\" at (%s, %s):".format(
                 error.token.lexer.name,

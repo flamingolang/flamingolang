@@ -1,11 +1,11 @@
 import compile.*
 import objects.base.*
-import objects.base.callable.FlamingoBoundMethodClass
-import objects.base.callable.FlamingoFunctionClass
+import objects.base.callable.FlBoundMethodClass
+import objects.base.callable.FlFunctionClass
 import objects.base.collections.*
-import objects.callable.FlamingoBuiltinFun
-import objects.callable.FlamingoCallableClass
-import objects.callable.FlamingoCodeObjectClass
+import objects.callable.FlBuiltinObj
+import objects.callable.FlCallableClass
+import objects.callable.FlCodeObjClass
 import objects.libraries.*
 import objects.members.*
 import runtime.*
@@ -60,7 +60,7 @@ fun compile(
         parser.assertFinished()
         compiler.visit(node)
     } catch (error: CompilerEscape) {
-        throwObject(error.error)
+        throwObj(error.error)
         return null
     }
 
@@ -76,45 +76,80 @@ fun readFile(file: File): String {
 }
 
 
-fun getStandardBuiltins(): HashMap<String, FlamingoObject> {
-    val builtins = HashMap<String, FlamingoObject>()
+fun getStandardBuiltins(): HashMap<String, FlObject> {
+    val builtins = HashMap<String, FlObject>()
 
-    builtins["Object"] = FlamingoObjectClass.reflectObject
-    builtins["Class"] = FlamingoReflectClass.reflectObject
-    builtins["Boolean"] = FlamingoBooleanClass.reflectObject
-    builtins["Callable"] = FlamingoCallableClass.reflectObject
-    builtins["Function"] = FlamingoFunctionClass.reflectObject
-    builtins["BoundMethod"] = FlamingoBoundMethodClass.reflectObject
-    builtins["CodeObject"] = FlamingoCodeObjectClass.reflectObject
-    builtins["Dictionary"] = FlamingoDictionaryClass.reflectObject
-    builtins["List"] = FlamingoListClass.reflectObject
-    builtins["Array"] = FlamingoArrayClass.reflectObject
-    builtins["NullClass"] = FlamingoNullClass.reflectObject
-    builtins["Number"] = FlamingoStringClass.reflectObject
-    builtins["String"] = FlamingoNumberClass.reflectObject
+    // classes
+    
+    builtins["Obj"] = FlObjClass.reflectObj
+    builtins["Class"] = FlReflectClass.reflectObj
+    builtins["Boolean"] = FlBooleanClass.reflectObj
+    builtins["Callable"] = FlCallableClass.reflectObj
+    builtins["Function"] = FlFunctionClass.reflectObj
+    builtins["BoundMethod"] = FlBoundMethodClass.reflectObj
+    builtins["CodeObj"] = FlCodeObjClass.reflectObj
+    builtins["Dictionary"] = FlDictionaryClass.reflectObj
+    builtins["List"] = FlListClass.reflectObj
+    builtins["Array"] = FlArrayClass.reflectObj
+    builtins["NullClass"] = FlNullClass.reflectObj
+    builtins["Number"] = FlStringClass.reflectObj
+    builtins["String"] = FlNumberClass.reflectObj
+    
+    // throwable classes
 
-    builtins["println"] = FlamingoBuiltinFun(BuiltinFunPrintln)
-    builtins["dis"] = FlamingoBuiltinFun(BuiltinFunDis)
-    builtins["meta"] = FlamingoBuiltinFun(BuiltinFunMeta)
-    builtins["import"] = FlamingoBuiltinFun(BuiltinFunImport)
+    builtins["Throwable"] = Throwable.reflectObj
+    builtins["Exception"] = Exception.reflectObj
+    builtins["IterationException"] = IterationException.reflectObj
+    builtins["ZeroDivisionException"] = ZeroDivisionException.reflectObj
+    builtins["FatalError"] = FatalError.reflectObj
+    builtins["ImportFatality"] = ImportFatality.reflectObj
+    builtins["StackOverflowFatality"] = StackOverflowFatality.reflectObj
+    builtins["Error"] = Error.reflectObj
+    builtins["TypeError"] = TypeError.reflectObj
+    builtins["NameError"] = NameError.reflectObj
+    builtins["ArgumentError"] = ArgumentError.reflectObj
+    builtins["AssignmentError"] = AssignmentError.reflectObj
+    builtins["SyntaxError"] = SyntaxError.reflectObj
+    builtins["SizeError"] = SizeError.reflectObj
+    builtins["ValueError"] = ValueError.reflectObj
+    builtins["IndexError"] = IndexError.reflectObj
+    builtins["AttributeError"] = AttributeError.reflectObj
+    
+    // builtin helper functions
+
+    builtins["println"] = FlBuiltinObj(BuiltinFunPrintln)
+    builtins["dis"] = FlBuiltinObj(BuiltinFunDis)
+    builtins["meta"] = FlBuiltinObj(BuiltinFunMeta)
+    builtins["import"] = FlBuiltinObj(BuiltinFunImport)
+
+    builtins["listOf"] = FlBuiltinObj(BuiltinFunListOf)
+    builtins["arrayOf"] = FlBuiltinObj(BuiltinFunArrayOf)
+    builtins["dictOf"] = FlBuiltinObj(BuiltinFunDictOf)
+    builtins["functionOf"] = FlBuiltinObj(BuiltinFunFunctionOf)
+    builtins["classOf"] = FlBuiltinObj(BuiltinFunClassOf)
+
+    builtins["map"] = FlBuiltinObj(BuiltinFunMap)
+    builtins["mapWhere"] = FlBuiltinObj(BuiltinFunMapWhere)
+    builtins["filter"] = FlBuiltinObj(BuiltinFunFilter)
+
 
     return builtins
 }
 
 
-lateinit var builtins: HashMap<String, FlamingoObject>
+lateinit var builtins: HashMap<String, FlObject>
 
-fun initFlamingo() {
+fun initFl() {
     // object
-    FlamingoObjectClass.let {
-        it.setClassAttribute("meta\$init", FlamingoBuiltinFun(BuiltinFunObjInit))
-        it.setClassAttribute("meta\$displayObject", FlamingoBuiltinFun(BuiltinFunObjDisplayObject))
-        it.setClassAttribute("meta\$toString", FlamingoBuiltinFun(BuiltinFunObjToString))
-        it.setClassAttribute("meta\$isIterable", FlamingoBuiltinFun(BuiltinFunObjIsIter))
-        it.setClassAttribute("meta\$eq", FlamingoBuiltinFun(BuiltinFunObjEq))
-        it.setClassAttribute("meta\$neq", FlamingoBuiltinFun(BuiltinFunObjNeq))
-        it.setClassAttribute("meta\$truthy", FlamingoBuiltinFun(BuiltinFunObjTruthy))
-        it.setClassAttribute("meta\$not", FlamingoBuiltinFun(BuiltinFunObjNot))
+    FlObjClass.let {
+        it.setClassAttribute("meta\$init", FlBuiltinObj(BuiltinFunObjInit))
+        it.setClassAttribute("meta\$displayObj", FlBuiltinObj(BuiltinFunObjDisplayObj))
+        it.setClassAttribute("meta\$toString", FlBuiltinObj(BuiltinFunObjToString))
+        it.setClassAttribute("meta\$isIterable", FlBuiltinObj(BuiltinFunObjIsIter))
+        it.setClassAttribute("meta\$eq", FlBuiltinObj(BuiltinFunObjEq))
+        it.setClassAttribute("meta\$neq", FlBuiltinObj(BuiltinFunObjNeq))
+        it.setClassAttribute("meta\$truthy", FlBuiltinObj(BuiltinFunObjTruthy))
+        it.setClassAttribute("meta\$not", FlBuiltinObj(BuiltinFunObjNot))
         listOf(
             "add",
             "sub",
@@ -127,127 +162,136 @@ fun initFlamingo() {
             "lteq",
             "gteq",
             "iter",
-            "hasNextObject",
-            "nextObject",
             "index",
             "indexSet",
+            "contains",
             "call",
             "minus",
             "plus"
-        ).forEach { mn -> it.setClassAttribute("meta\$$mn", FlamingoBuiltinFun(ErrorWrapperKtFunctionAny(mn))) }
+        ).forEach { mn -> it.setClassAttribute("meta\$$mn", FlBuiltinObj(ErrorWrapperKtFunctionAny(mn))) }
 
-        it.setClassAttribute("getClass", FlamingoBuiltinFun(BuiltinFunObjGetClass))
-        it.setClassAttribute("instanceOf", FlamingoBuiltinFun(BuiltinFunObjInstanceOf))
-        it.setClassAttribute("aro", FlamingoBuiltinFun(BuiltinFunObjAro))
+        it.setClassAttribute("getClass", FlBuiltinObj(BuiltinFunObjGetClass))
+        it.setClassAttribute("instanceOf", FlBuiltinObj(BuiltinFunObjInstanceOf))
+        it.setClassAttribute("aro", FlBuiltinObj(BuiltinFunObjAro))
 
-        it.setClassAttribute("let", FlamingoBuiltinFun(BuiltinFunObjLet))
-        it.setClassAttribute("letIf", FlamingoBuiltinFun(BuiltinFunObjLetIf))
+        it.setClassAttribute("let", FlBuiltinObj(BuiltinFunObjLet))
+        it.setClassAttribute("letIf", FlBuiltinObj(BuiltinFunObjLetIf))
+        it.setClassAttribute("letContext", FlBuiltinObj(BuiltinFunObjLetContext))
 
-        it.setClassAttribute("explicitCall", FlamingoBuiltinFun(BuiltinFunObjExplicitCall))
+        it.setClassAttribute("explicitCall", FlBuiltinObj(BuiltinFunObjExplicitCall))
     }
     // reflect objects
-    FlamingoReflectClass.let {
-        it.setClassAttribute("meta\$new", FlamingoBuiltinFun(BuiltinFunClsNew))
+    FlReflectClass.let {
+        it.setClassAttribute("meta\$new", FlBuiltinObj(BuiltinFunClsNew))
 
-        it.setClassAttribute("meta\$call", FlamingoBuiltinFun(BuiltinFunClsCall))
-        it.setClassAttribute("meta\$displayObject", FlamingoBuiltinFun(BuiltinFunClsDisplayObject))
+        it.setClassAttribute("meta\$call", FlBuiltinObj(BuiltinFunClsCall))
+        it.setClassAttribute("meta\$displayObj", FlBuiltinObj(BuiltinFunClsDisplayObj))
     }
     // callable
-    FlamingoCallableClass.setClassAttribute("meta\$call", FlamingoBuiltinFun(BuiltinFunCallableCall))
-    FlamingoCallableClass.setClassAttribute("meta\$displayObject", FlamingoBuiltinFun(BuiltinFunCallableDisplayObject))
+    FlCallableClass.setClassAttribute("meta\$call", FlBuiltinObj(BuiltinFunCallableCall))
+    FlCallableClass.setClassAttribute("meta\$displayObj", FlBuiltinObj(BuiltinFunCallableDisplayObj))
     // code object
-    FlamingoCodeObjectClass.setClassAttribute("meta\$displayObject", FlamingoBuiltinFun(BuiltinFunCodeObjDisplayObject))
-    FlamingoCodeObjectClass.setClassAttribute("callLetting", FlamingoBuiltinFun(BuiltinFunCodeObjCallLetting))
+    FlCodeObjClass.setClassAttribute("meta\$displayObj", FlBuiltinObj(BuiltinFunCodeObjDisplayObj))
+    FlCodeObjClass.setClassAttribute("callLetting", FlBuiltinObj(BuiltinFunCodeObjCallLetting))
     // generic iterator
-    FlamingoGenericIteratorClass.setClassAttribute("hasNextObject", FlamingoBuiltinFun(BuiltinFunGenIterHasNextObject))
-    FlamingoGenericIteratorClass.setClassAttribute("nextObject", FlamingoBuiltinFun(BuiltinFunGenIterNextObject))
+    FlGenericIteratorClass.setClassAttribute("hasNextObj", FlBuiltinObj(BuiltinFunGenIterHasNextObj))
+    FlGenericIteratorClass.setClassAttribute("nextObj", FlBuiltinObj(BuiltinFunGenIterNextObj))
     // list
-    FlamingoListClass.let {
-        it.setClassAttribute("meta\$displayObject", FlamingoBuiltinFun(BuiltinFunListDisplayObject))
-        it.setClassAttribute("meta\$iter", FlamingoBuiltinFun(BuiltinFunListIter))
-        it.setClassAttribute("meta\$isIterable", FlamingoBuiltinFun(BuiltinFunListIsIter))
+    FlListClass.let {
+        it.setClassAttribute("meta\$displayObj", FlBuiltinObj(BuiltinFunListDisplayObj))
+        it.setClassAttribute("meta\$iter", FlBuiltinObj(BuiltinFunListIter))
+        it.setClassAttribute("meta\$isIterable", FlBuiltinObj(BuiltinFunListIsIter))
+        it.setClassAttribute("meta\$index", FlBuiltinObj(BuiltinFunListIndex))
 
-        it.setClassAttribute("add", FlamingoBuiltinFun(BuiltinFunListAdd))
-        it.setClassAttribute("addFirst", FlamingoBuiltinFun(BuiltinFunListAddFirst))
-        it.setClassAttribute("insert", FlamingoBuiltinFun(BuiltinFunListInsert))
-        it.setClassAttribute("remove", FlamingoBuiltinFun(BuiltinFunListRemove))
-        it.setClassAttribute("removeObjects", FlamingoBuiltinFun(BuiltinFunListRemoveObjs))
-        it.setClassAttribute("clear", FlamingoBuiltinFun(BuiltinFunListClear))
+        it.setClassAttribute("add", FlBuiltinObj(BuiltinFunListAdd))
+        it.setClassAttribute("addFirst", FlBuiltinObj(BuiltinFunListAddFirst))
+        it.setClassAttribute("insert", FlBuiltinObj(BuiltinFunListInsert))
+        it.setClassAttribute("remove", FlBuiltinObj(BuiltinFunListRemove))
+        it.setClassAttribute("removeObjs", FlBuiltinObj(BuiltinFunListRemoveObjs))
+        it.setClassAttribute("clear", FlBuiltinObj(BuiltinFunListClear))
+        it.setClassAttribute("size", FlBuiltinObj(BuiltinFunListSize))
 
-        it.setClassAttribute("map", FlamingoBuiltinFun(BuiltinFunListMap))
-        it.setClassAttribute("mapped", FlamingoBuiltinFun(BuiltinFunListMapped))
-        it.setClassAttribute("filter", FlamingoBuiltinFun(BuiltinFunListFilter))
-        it.setClassAttribute("filtered", FlamingoBuiltinFun(BuiltinFunListFiltered))
+        it.setClassAttribute("map", FlBuiltinObj(BuiltinFunListMap))
+        it.setClassAttribute("mapped", FlBuiltinObj(BuiltinFunListMapped))
+        it.setClassAttribute("filter", FlBuiltinObj(BuiltinFunListFilter))
+        it.setClassAttribute("filtered", FlBuiltinObj(BuiltinFunListFiltered))
+        it.setClassAttribute("where", FlBuiltinObj(BuiltinFunListWhere))
     }
     // array
-    FlamingoArrayClass.setClassAttribute("meta\$displayObject", FlamingoBuiltinFun(BuiltinFunArrayDisplayObject))
-    FlamingoArrayClass.setClassAttribute("meta\$iter", FlamingoBuiltinFun(BuiltinFunArrayIter))
-    FlamingoArrayClass.setClassAttribute("meta\$isIterable", FlamingoBuiltinFun(BuiltinFunArrayIsIter))
+    FlArrayClass.setClassAttribute("meta\$displayObj", FlBuiltinObj(BuiltinFunArrayDisplayObj))
+    FlArrayClass.setClassAttribute("meta\$iter", FlBuiltinObj(BuiltinFunArrayIter))
+    FlArrayClass.setClassAttribute("meta\$isIterable", FlBuiltinObj(BuiltinFunArrayIsIter))
     // range
-    FlamingoRangeClass.setClassAttribute("meta\$displayObject", FlamingoBuiltinFun(BuiltinFunRangeDisplayObject))
-    FlamingoRangeClass.setClassAttribute("meta\$iter", FlamingoBuiltinFun(BuiltinFunRangeIter))
-    FlamingoRangeClass.setClassAttribute("meta\$isIterable", FlamingoBuiltinFun(BuiltinFunRangeIsIter))
-    FlamingoRangeIterClass.setClassAttribute("hasNextObject", FlamingoBuiltinFun(BuiltinFunRangeIterHasNextObj))
-    FlamingoRangeIterClass.setClassAttribute("nextObject", FlamingoBuiltinFun(BuiltinFunRangeIterNextObj))
+    FlRangeClass.setClassAttribute("meta\$displayObj", FlBuiltinObj(BuiltinFunRangeDisplayObj))
+    FlRangeClass.setClassAttribute("meta\$iter", FlBuiltinObj(BuiltinFunRangeIter))
+    FlRangeClass.setClassAttribute("meta\$isIterable", FlBuiltinObj(BuiltinFunRangeIsIter))
+    FlRangeIterClass.setClassAttribute("hasNextObj", FlBuiltinObj(BuiltinFunRangeIterHasNextObj))
+    FlRangeIterClass.setClassAttribute("nextObj", FlBuiltinObj(BuiltinFunRangeIterNextObj))
     // dictionary
-    FlamingoDictionaryClass.setClassAttribute(
-        "meta\$displayObject",
-        FlamingoBuiltinFun(BuiltinFunDictionaryDisplayObject)
+    FlDictionaryClass.setClassAttribute(
+        "meta\$displayObj",
+        FlBuiltinObj(BuiltinFunDictionaryDisplayObj)
     )
     // number
-    FlamingoNumberClass.let {
-        it.setClassAttribute("meta\$displayObject", FlamingoBuiltinFun(BuiltinFunNumberDisplayObject))
-        it.setClassAttribute("meta\$add", FlamingoBuiltinFun(BuiltinFunNumberAdd))
-        it.setClassAttribute("meta\$sub", FlamingoBuiltinFun(BuiltinFunNumberSub))
-        it.setClassAttribute("meta\$mul", FlamingoBuiltinFun(BuiltinFunNumberMul))
-        it.setClassAttribute("meta\$div", FlamingoBuiltinFun(BuiltinFunNumberDiv))
-        it.setClassAttribute("meta\$pow", FlamingoBuiltinFun(BuiltinFunNumberPow))
-        it.setClassAttribute("meta\$mod", FlamingoBuiltinFun(BuiltinFunNumberMod))
+    FlNumberClass.let {
+        it.setClassAttribute("meta\$displayObj", FlBuiltinObj(BuiltinFunNumberDisplayObj))
+        it.setClassAttribute("meta\$add", FlBuiltinObj(BuiltinFunNumberAdd))
+        it.setClassAttribute("meta\$sub", FlBuiltinObj(BuiltinFunNumberSub))
+        it.setClassAttribute("meta\$mul", FlBuiltinObj(BuiltinFunNumberMul))
+        it.setClassAttribute("meta\$div", FlBuiltinObj(BuiltinFunNumberDiv))
+        it.setClassAttribute("meta\$pow", FlBuiltinObj(BuiltinFunNumberPow))
+        it.setClassAttribute("meta\$mod", FlBuiltinObj(BuiltinFunNumberMod))
 
-        it.setClassAttribute("meta\$minus", FlamingoBuiltinFun(BuiltinFunNumberMinus))
-        it.setClassAttribute("meta\$plus", FlamingoBuiltinFun(BuiltinFunNumberPlus))
+        it.setClassAttribute("meta\$minus", FlBuiltinObj(BuiltinFunNumberMinus))
+        it.setClassAttribute("meta\$plus", FlBuiltinObj(BuiltinFunNumberPlus))
 
-        it.setClassAttribute("meta\$eq", FlamingoBuiltinFun(BuiltinFunNumberEq))
-        it.setClassAttribute("meta\$lt", FlamingoBuiltinFun(BuiltinFunNumberLt))
-        it.setClassAttribute("meta\$gt", FlamingoBuiltinFun(BuiltinFunNumberGt))
-        it.setClassAttribute("meta\$lteq", FlamingoBuiltinFun(BuiltinFunNumberLtEq))
-        it.setClassAttribute("meta\$gteq", FlamingoBuiltinFun(BuiltinFunNumberGtEq))
+        it.setClassAttribute("meta\$eq", FlBuiltinObj(BuiltinFunNumberEq))
+        it.setClassAttribute("meta\$lt", FlBuiltinObj(BuiltinFunNumberLt))
+        it.setClassAttribute("meta\$gt", FlBuiltinObj(BuiltinFunNumberGt))
+        it.setClassAttribute("meta\$lteq", FlBuiltinObj(BuiltinFunNumberLtEq))
+        it.setClassAttribute("meta\$gteq", FlBuiltinObj(BuiltinFunNumberGtEq))
 
+        it.setClassAttribute("isInteger", FlBuiltinObj(BuiltinFunNumberIsInteger))
+        it.setClassAttribute("isEven", FlBuiltinObj(BuiltinFunNumberIsEven))
+        it.setClassAttribute("isOdd", FlBuiltinObj(BuiltinFunNumberIsOdd))
+
+        it.setClassAttribute("floor", FlBuiltinObj(BuiltinFunNumberFloor))
+        it.setClassAttribute("ceil", FlBuiltinObj(BuiltinFunNumberCeil))
     }
     // string
-    FlamingoStringClass.let {
-        it.setClassAttribute("meta\$displayObject", FlamingoBuiltinFun(BuiltinFunStringDisplayObject))
-        it.setClassAttribute("meta\$toString", FlamingoBuiltinFun(BuiltinFunStringToString))
-        it.setClassAttribute("meta\$add", FlamingoBuiltinFun(BuiltinFunStringAdd))
-        it.setClassAttribute("meta\$mul", FlamingoBuiltinFun(BuiltinFunStringMul))
-        it.setClassAttribute("meta\$mod", FlamingoBuiltinFun(BuiltinFunStringFormat))
+    FlStringClass.let {
+        it.setClassAttribute("meta\$displayObj", FlBuiltinObj(BuiltinFunStringDisplayObj))
+        it.setClassAttribute("meta\$toString", FlBuiltinObj(BuiltinFunStringToString))
+        it.setClassAttribute("meta\$add", FlBuiltinObj(BuiltinFunStringAdd))
+        it.setClassAttribute("meta\$mul", FlBuiltinObj(BuiltinFunStringMul))
+        it.setClassAttribute("meta\$mod", FlBuiltinObj(BuiltinFunStringFormat))
 
-        it.setClassAttribute("format", FlamingoBuiltinFun(BuiltinFunStringFormat))
-        it.setClassAttribute("toNumberOrNull", FlamingoBuiltinFun(BuiltinFunStringToNumOrNull))
+        it.setClassAttribute("format", FlBuiltinObj(BuiltinFunStringFormat))
+        it.setClassAttribute("toNumberOrNull", FlBuiltinObj(BuiltinFunStringToNumOrNull))
     }
     // boolean
-    FlamingoBooleanClass.let {
-        it.setClassAttribute("meta\$displayObject", FlamingoBuiltinFun(BuiltinFunBoolDisplayObject))
-        it.setClassAttribute("meta\$truthy", FlamingoBuiltinFun(BuiltinFunBoolTruthy))
+    FlBooleanClass.let {
+        it.setClassAttribute("meta\$displayObj", FlBuiltinObj(BuiltinFunBoolDisplayObj))
+        it.setClassAttribute("meta\$truthy", FlBuiltinObj(BuiltinFunBoolTruthy))
     }
     // null
-    FlamingoNullClass.let {
-        it.setClassAttribute("meta\$displayObject", FlamingoBuiltinFun(BuiltinFunNullDisplayObject))
-        it.setClassAttribute("meta\$truthy", FlamingoBuiltinFun(BuiltinFunNullTruthy))
+    FlNullClass.let {
+        it.setClassAttribute("meta\$displayObj", FlBuiltinObj(BuiltinFunNullDisplayObj))
+        it.setClassAttribute("meta\$truthy", FlBuiltinObj(BuiltinFunNullTruthy))
     }
     // module
-    FlamingoModuleClass.let {
-        it.setClassAttribute("meta\$displayObject", FlamingoBuiltinFun(BuiltinFunModDisplayObject))
+    FlModuleClass.let {
+        it.setClassAttribute("meta\$displayObj", FlBuiltinObj(BuiltinFunModDisplayObj))
 
-        it.setClassAttribute("export", FlamingoBuiltinFun(BuiltinFunModExport))
-        it.setClassAttribute("getPath", FlamingoBuiltinFun(BuiltinFunModGetPath))
+        it.setClassAttribute("export", FlBuiltinObj(BuiltinFunModExport))
+        it.setClassAttribute("getPath", FlBuiltinObj(BuiltinFunModGetPath))
     }
 
     builtins = getStandardBuiltins()
 }
 
 fun main(args: Array<String>) {
-    initFlamingo()
+    initFl()
 
     val operations = ArrayList<Operation>()
     val frame: OperationalFrame

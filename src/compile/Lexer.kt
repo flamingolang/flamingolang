@@ -1,7 +1,7 @@
 package compile
 
-import objects.base.FlamingoCompilerErrorObject
-import objects.base.FlamingoThrowableObject
+import objects.base.FlCompilerErrorObj
+import objects.base.FlThrowableObj
 
 enum class TokenType {
     // Single-character tokens.
@@ -175,7 +175,7 @@ class Lexer(val name: String, val source: String, private var pos: Int = 0, priv
 
     private fun cantCompile(message: String): Token {
         val errorToken = makeToken(TokenType.TOKEN_ERROR)
-        throw CompilerEscape(FlamingoCompilerErrorObject(message, errorToken))
+        throw CompilerEscape(FlCompilerErrorObj(message, errorToken))
     }
 
     private fun advance() {
@@ -213,7 +213,7 @@ fun isIdentifier(ch: Char): Boolean {
     return ch == '_' || ch == '$' || Character.isAlphabetic(ch.code)
 }
 
-data class CompilerEscape(val error: FlamingoThrowableObject) : Exception()
+data class CompilerEscape(val error: FlThrowableObj) : Exception()
 
 fun reveal(string: String) =
     string.replace("\u001B\\[([;\\d])*m".toRegex(), "\\\\[ESC;$1]").replace("\\n".toRegex(), "\\\\n")

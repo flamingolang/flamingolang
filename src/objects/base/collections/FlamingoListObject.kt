@@ -1,14 +1,14 @@
 package objects.base.collections
 
-import objects.base.FlamingoClass
-import objects.base.FlamingoObject
-import objects.base.TrustedFlamingoClass
+import objects.base.FlClass
+import objects.base.FlObject
+import objects.base.TrustedFlClass
 
-class FlamingoListObject(
-    val list: MutableList<FlamingoObject>,
-    cls: FlamingoClass = FlamingoListClass,
+class FlListObj(
+    val list: MutableList<FlObject>,
+    cls: FlClass = FlListClass,
     readOnly: Boolean = true
-) : FlamingoObject(cls, readOnly = readOnly)
+) : FlObject(cls, readOnly = readOnly)
 
-val FlamingoListClass = TrustedFlamingoClass("List")
+val FlListClass = TrustedFlClass("List")
 

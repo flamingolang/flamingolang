@@ -1,13 +1,13 @@
 package objects.base.collections
 
-import objects.base.FlamingoClass
-import objects.base.FlamingoObject
-import objects.base.TrustedFlamingoClass
+import objects.base.FlClass
+import objects.base.FlObject
+import objects.base.TrustedFlClass
 
-class FlamingoRangeObject(
-    val range: Pair<FlamingoObject, FlamingoObject>,
-    cls: FlamingoClass = FlamingoRangeClass,
+class FlRangeObj(
+    val range: Pair<FlObject, FlObject>,
+    cls: FlClass = FlRangeClass,
     readOnly: Boolean = true
-) : FlamingoObject(cls, readOnly = readOnly)
+) : FlObject(cls, readOnly = readOnly)
 
-val FlamingoRangeClass = TrustedFlamingoClass("Range")
+val FlRangeClass = TrustedFlClass("Range")

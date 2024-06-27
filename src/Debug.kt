@@ -1,8 +1,8 @@
 import compile.BinaryOperationType
 import compile.Jump
-import objects.base.FlamingoObject
+import objects.base.FlObject
 import objects.callable.CallSpec
-import objects.callable.PartialCodeObject
+import objects.callable.PartialCodeObj
 import objects.callable.PartialFunction
 import runtime.CompiledOperation
 import runtime.Frame
@@ -13,7 +13,7 @@ fun disOperands(operands: Array<Any>): String {
     for (operand in operands) {
         disassembly.add(
             when (operand) {
-                is FlamingoObject -> operand.displaySafe()
+                is FlObject -> operand.displaySafe()
                 is Frame -> "%s(%s)".format(operand::class.simpleName, operand.name)
                 is Jump -> "to %d".format(operand.to)
                 is String -> "\"%s\"".format(operand)
@@ -22,7 +22,7 @@ fun disOperands(operands: Array<Any>): String {
                     operand.defaults?.size ?: 0,
                 )
 
-                is PartialCodeObject -> "(code '%s')".format(operand.scope.name)
+                is PartialCodeObj -> "(code '%s')".format(operand.scope.name)
                 is CallSpec -> "(%d, %d)".format(operand.arguments, operand.keywords.size)
                 // binary operation types
                 is BinaryOperationType -> when (operand) {
@@ -53,13 +53,13 @@ fun disOperations(name: String, operations: Collection<Operation>, offset: Int =
     if (offset >= operations.size) return "disassembly of %s is empty".format(name)
     val disassembly = StringBuilder("disassembly of %s:\n".format(name))
     val jumps = HashSet<Int>()
-    val otherCodeDisassemblies = HashSet<PartialCodeObject>()
+    val otherCodeDisassemblies = HashSet<PartialCodeObj>()
 
     for ((i, operation) in operations.withIndex()) {
         for (operand in operation.operands) {
             when (operand) {
                 is Jump -> jumps.add(operand.to)
-                is PartialCodeObject -> {
+                is PartialCodeObj -> {
                     if (i >= offset) otherCodeDisassemblies.add(operand)
                 }
             }
@@ -111,5 +111,5 @@ fun disOperations(name: String, operations: Collection<Operation>, offset: Int =
 }
 
 fun breakpoint() {
-    println("==( Flamingo Debugger )==")
+    println("==( Fl Debugger )==")
 }

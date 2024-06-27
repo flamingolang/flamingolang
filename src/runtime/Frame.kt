@@ -1,14 +1,14 @@
 package runtime
 
-import objects.base.FlamingoObject
+import objects.base.FlObject
 import objects.callable.KtFunction
 import java.util.*
 
 /**
  * @param name the name of the frame (used by error tracing)
  */
-open class Frame(val name: String, closure: NameTable? = null, initLocals: Map<String, FlamingoObject>? = null) {
-    val stack = Stack<FlamingoObject>()
+open class Frame(val name: String, closure: NameTable? = null, initLocals: Map<String, FlObject>? = null) {
+    val stack = Stack<FlObject>()
 
     var locals = NameTable(name, closure)
 
@@ -35,7 +35,7 @@ class OperationalFrame(
     name: String,
     private val operations: Collection<Operation>,
     closure: NameTable? = null,
-    initLocals: Map<String, FlamingoObject>? = null,
+    initLocals: Map<String, FlObject>? = null,
     val filePath: String? = null
 ) : Frame(name, closure, initLocals) {
     var ip = 0

@@ -1,13 +1,13 @@
 package objects.base.collections
 
-import objects.base.FlamingoClass
-import objects.base.FlamingoObject
-import objects.base.TrustedFlamingoClass
+import objects.base.FlClass
+import objects.base.FlObject
+import objects.base.TrustedFlClass
 
-class FlamingoArrayObject(
-    val array: Array<FlamingoObject>,
-    cls: FlamingoClass = FlamingoArrayClass,
+class FlArrayObj(
+    val array: Array<FlObject>,
+    cls: FlClass = FlArrayClass,
     readOnly: Boolean = true
-) : FlamingoObject(cls, readOnly = readOnly)
+) : FlObject(cls, readOnly = readOnly)
 
-val FlamingoArrayClass = TrustedFlamingoClass("Array")
+val FlArrayClass = TrustedFlClass("Array")

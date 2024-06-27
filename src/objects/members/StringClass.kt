@@ -1,42 +1,42 @@
 package objects.members
 
 import objects.base.*
-import objects.base.collections.FlamingoListObject
+import objects.base.collections.FlListObj
 import objects.callable.KtCallContext
 import objects.callable.KtFunction
 import objects.callable.ParameterSpec
-import runtime.throwObject
+import runtime.throwObj
 
-object BuiltinFunStringDisplayObject : KtFunction(ParameterSpec("String.displayObject")) {
-    override fun accept(callContext: KtCallContext): FlamingoObject? {
-        val self = callContext.getObjectContextOfType(FlamingoStringObject::class) ?: return null
+object BuiltinFunStringDisplayObj : KtFunction(ParameterSpec("String.displayObj")) {
+    override fun accept(callContext: KtCallContext): FlObject? {
+        val self = callContext.getObjContextOfType(FlStringObj::class) ?: return null
         return stringOf("'%s'".format(self.string))
     }
 }
 
 object BuiltinFunStringToString : KtFunction(ParameterSpec("String.toString")) {
-    override fun accept(callContext: KtCallContext): FlamingoObject? {
-        return callContext.getObjectContextOfType(FlamingoStringObject::class)
+    override fun accept(callContext: KtCallContext): FlObject? {
+        return callContext.getObjContextOfType(FlStringObj::class)
     }
 }
 
 
 object BuiltinFunStringAdd : KtFunction(ParameterSpec("String.add", listOf("string"))) {
-    override fun accept(callContext: KtCallContext): FlamingoObject? {
-        val self = callContext.getObjectContextOfType(FlamingoStringObject::class) ?: return null
-        val string = callContext.getLocalOfType("string", FlamingoStringObject::class) ?: return null
+    override fun accept(callContext: KtCallContext): FlObject? {
+        val self = callContext.getObjContextOfType(FlStringObj::class) ?: return null
+        val string = callContext.getLocalOfType("string", FlStringObj::class) ?: return null
         return stringOf(self.string + string.string)
     }
 }
 
 
 object BuiltinFunStringMul : KtFunction(ParameterSpec("String.mul", listOf("times"))) {
-    override fun accept(callContext: KtCallContext): FlamingoObject? {
-        val self = callContext.getObjectContextOfType(FlamingoStringObject::class) ?: return null
-        val times = callContext.getLocalOfType("times", FlamingoNumberObject::class) ?: return null
+    override fun accept(callContext: KtCallContext): FlObject? {
+        val self = callContext.getObjContextOfType(FlStringObj::class) ?: return null
+        val times = callContext.getLocalOfType("times", FlNumberObj::class) ?: return null
         val timesInt = times.assertGetInteger("times") ?: return null
         if (timesInt < 0) {
-            throwObject("%s type object can't be repeated less than 0 (%d) times".format(timesInt), ValueError)
+            throwObj("%s type object can't be repeated less than 0 (%d) times".format(timesInt), ValueError)
             return null
         }
         return stringOf(self.string.repeat(timesInt))
@@ -45,9 +45,9 @@ object BuiltinFunStringMul : KtFunction(ParameterSpec("String.mul", listOf("time
 
 
 object BuiltinFunStringFormat : KtFunction(ParameterSpec("String.format", varargs = "arguments")) {
-    override fun accept(callContext: KtCallContext): FlamingoObject? {
-        val self = callContext.getObjectContextOfType(FlamingoStringObject::class) ?: return null
-        val arguments = callContext.getLocalOfType("arguments", FlamingoListObject::class) ?: return null
+    override fun accept(callContext: KtCallContext): FlObject? {
+        val self = callContext.getObjContextOfType(FlStringObj::class) ?: return null
+        val arguments = callContext.getLocalOfType("arguments", FlListObj::class) ?: return null
 
         val itemStrings = mutableListOf<String>()
 
@@ -71,7 +71,7 @@ object BuiltinFunStringFormat : KtFunction(ParameterSpec("String.format", vararg
                         formatString.append(itemStrings.removeFirst())
                         n++
                     } else {
-                        throwObject(
+                        throwObj(
                             "format replacements don't have enough items, only given %d".format(itemStringsSize),
                             IndexError
                         )
@@ -85,7 +85,7 @@ object BuiltinFunStringFormat : KtFunction(ParameterSpec("String.format", vararg
         }
 
         if (itemStrings.isNotEmpty()) {
-            throwObject(
+            throwObj(
                 "format replacements was given too many items (%d) expected only %d".format(itemStringsSize, n),
                 IndexError
             )
@@ -97,8 +97,8 @@ object BuiltinFunStringFormat : KtFunction(ParameterSpec("String.format", vararg
 }
 
 object BuiltinFunStringToNumOrNull : KtFunction(ParameterSpec("String.toNumberOrNull")) {
-    override fun accept(callContext: KtCallContext): FlamingoObject? {
-        val self = callContext.getObjectContextOfType(FlamingoStringObject::class) ?: return null
+    override fun accept(callContext: KtCallContext): FlObject? {
+        val self = callContext.getObjContextOfType(FlStringObj::class) ?: return null
         val converted = self.string.toDoubleOrNull() ?: return Null
         return numberOf(converted)
     }

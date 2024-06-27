@@ -6,10 +6,10 @@ import compile.Jump
 import compile.Token
 import compile.UnaryOperationType
 import objects.base.*
-import objects.base.callable.FlamingoFunctionObject
-import objects.base.collections.FlamingoArrayObject
-import objects.base.collections.FlamingoListObject
-import objects.base.collections.FlamingoRangeObject
+import objects.base.callable.FlFunctionObj
+import objects.base.collections.FlArrayObj
+import objects.base.collections.FlListObj
+import objects.base.collections.FlRangeObj
 import objects.callable.*
 import objects.libraries.MetaSentinel
 import runtime.OpCode.*
@@ -26,7 +26,7 @@ import runtime.OpCode.*
  * @property BUILD_RANGE
  * @property LOAD_CTX
  *
- * @property LOAD_CONST (obj: FlamingoObject)
+ * @property LOAD_CONST (obj: FlObj)
  * @property JUMP_ABSOLUTE (to: Int)
  * @property LOAD_NAME (name: String)
  * @property JUMP_IF_TRUE (to: Jump)
@@ -42,14 +42,14 @@ import runtime.OpCode.*
  * @property STORE_ATTR (name: String)
  * @property BUILD_FUNCTION (partialFunction: PartialFunction)
  * @property ITER_NEXT (to: Jump)
- * @property BUILD_CODE (obj: FlamingoCodeObject)
+ * @property BUILD_CODE (obj: FlCodeObj)
  * @property BINARY_OPERATION (type: BinaryOperationType)
  * @property UNARY_OPERATION (type: UnaryOperationType)
  *
  * @property CALL (arguments: Int, keywords: Int)
  * @property INDEX_TOP (arguments: Int, keywords: Int)
  * @property SETUP_TRY_AS (to: Jump, name: String?)
- * @property BUILD_CLASS (name: String, packages: Int, namespace: codeObject)
+ * @property BUILD_CLASS (name: String, packages: Int, namespace: codeObj)
  *
  *
  * @property POP_FRAME ; for debugging purposes
@@ -88,7 +88,7 @@ open class Operation(val opCode: OpCode, val operands: Array<Any>) {
     fun execute(frame: OperationalFrame) {
         when (opCode) {
             LOAD_CONST -> {
-                frame.stack.add(operands[0] as FlamingoObject)
+                frame.stack.add(operands[0] as FlObject)
             }
 
             JUMP_ABSOLUTE -> {
@@ -98,7 +98,7 @@ open class Operation(val opCode: OpCode, val operands: Array<Any>) {
 
             RETURN_VALUE -> {
                 // setting an error because this opcode should be handled by the Vm's call method
-                throwObject(
+                throwObj(
                     "Operational frame tried to handle returning a value outside of the Vm's call method",
                     FatalError
                 )
@@ -118,17 +118,17 @@ open class Operation(val opCode: OpCode, val operands: Array<Any>) {
 
             THROW_ERROR -> {
                 val thrown = frame.stack.pop()
-                if (thrown is FlamingoThrowableObject) throwObject(thrown)
-                else throwObject("%s type object is not throwable".format(thrown.cls.name), TypeError)
+                if (thrown is FlThrowableObj) throwObj(thrown)
+                else throwObj("%s type object is not throwable".format(thrown.cls.name), TypeError)
             }
 
             POP_TOP -> {
-                popObject()
+                popObj()
             }
 
             LOAD_NAME -> {
                 val value = frame.locals.get(operands[0] as String) ?: return
-                addObject(value)
+                addObj(value)
             }
 
             POP_JUMP_IF_FALSE -> {
@@ -138,91 +138,91 @@ open class Operation(val opCode: OpCode, val operands: Array<Any>) {
             }
 
             BINARY_OPERATION -> {
-                val right = popObject()
-                val left = popObject()
+                val right = popObj()
+                val left = popObj()
 
                 when (operands[0] as BinaryOperationType) {
                     BinaryOperationType.ADD -> {
                         val result = left.add(right) ?: return
-                        addObject(result)
+                        addObj(result)
                     }
 
                     BinaryOperationType.SUB -> {
                         val result = left.sub(right) ?: return
-                        addObject(result)
+                        addObj(result)
                     }
 
                     BinaryOperationType.MUL -> {
                         val result = left.mul(right) ?: return
-                        addObject(result)
+                        addObj(result)
                     }
 
                     BinaryOperationType.DIV -> {
                         val result = left.div(right) ?: return
-                        addObject(result)
+                        addObj(result)
                     }
 
                     BinaryOperationType.POW -> {
                         val result = left.pow(right) ?: return
-                        addObject(result)
+                        addObj(result)
                     }
 
                     BinaryOperationType.MOD -> {
                         val result = left.mod(right) ?: return
-                        addObject(result)
+                        addObj(result)
                     }
 
                     BinaryOperationType.COMP_EQUAL -> {
                         val result = left.eq(right) ?: return
-                        addObject(result)
+                        addObj(result)
                     }
 
                     BinaryOperationType.COMP_NOT_EQUAL -> {
                         val result = left.neq(right) ?: return
-                        addObject(result)
+                        addObj(result)
                     }
 
                     BinaryOperationType.COMP_LESS -> {
                         val result = left.lt(right) ?: return
-                        addObject(result)
+                        addObj(result)
                     }
 
                     BinaryOperationType.COMP_GREATER -> {
                         val result = left.gt(right) ?: return
-                        addObject(result)
+                        addObj(result)
                     }
 
                     BinaryOperationType.COMP_LESS_EQUAL -> {
                         val result = left.lteq(right) ?: return
-                        addObject(result)
+                        addObj(result)
                     }
 
                     BinaryOperationType.COMP_GREATER_EQUAL -> {
                         val result = left.gteq(right) ?: return
-                        addObject(result)
+                        addObj(result)
                     }
 
-                    BinaryOperationType.COMP_IS -> { addObject(booleanOf(left == right)) }
-                    BinaryOperationType.COMP_IS_NOT -> addObject(booleanOf(left != right))
+                    BinaryOperationType.COMP_IS -> { addObj(booleanOf(left == right)) }
+                    BinaryOperationType.COMP_IS_NOT -> addObj(booleanOf(left != right))
                 }
             }
 
             JUMP_IF_TRUE -> {
-                val truthy = topObject().truthy() ?: return
+                val truthy = topObj().truthy() ?: return
                 if (truthy) frame.ip = (operands[0] as Jump).to - 1
             }
 
             JUMP_IF_FALSE -> {
-                val truthy = topObject().truthy() ?: return
+                val truthy = topObj().truthy() ?: return
                 if (!truthy) frame.ip = (operands[0] as Jump).to - 1
             }
 
             STORE_NAME_LAZY -> {
-                frame.locals.set(operands[0] as String, topObject())
+                frame.locals.set(operands[0] as String, topObj())
             }
 
             STORE_NAME -> {
-                val obj = popObject()
+                val obj = popObj()
                 val name = operands[0] as String
                 if (obj.getAttributeOrDefault(
                         "<flag:meta>",
@@ -233,7 +233,7 @@ open class Operation(val opCode: OpCode, val operands: Array<Any>) {
             }
 
             STORE_CONST -> {
-                val obj = popObject()
+                val obj = popObj()
                 val name = operands[0] as String
                 if (obj.getAttributeOrDefault(
                         "<flag:meta>",
@@ -244,61 +244,66 @@ open class Operation(val opCode: OpCode, val operands: Array<Any>) {
             }
 
             BUILD_LIST -> {
-                val items = ArrayList<FlamingoObject>()
-                for (i in 0..<operands[0] as Int) items.addFirst(popObject())
-                addObject(FlamingoListObject(items))
+                val items = ArrayList<FlObject>()
+                for (i in 0..<operands[0] as Int) items.addFirst(popObj())
+                addObj(FlListObj(items))
             }
 
             BUILD_ARRAY -> {
-                val items = ArrayList<FlamingoObject>()
-                for (i in 0..<operands[0] as Int) items.addFirst(popObject())
-                addObject(FlamingoArrayObject(items.toTypedArray()))
+                val items = ArrayList<FlObject>()
+                for (i in 0..<operands[0] as Int) items.addFirst(popObj())
+                addObj(FlArrayObj(items.toTypedArray()))
             }
 
             GET_ATTR -> {
-                val attr = popObject().getAttribute(operands[0] as String)
-                attr?.let { addObject(it) }
+                val attr = popObj().getAttribute(operands[0] as String)
+                attr?.let { addObj(it) }
             }
 
             INDEX_TOP -> {
-                val target = popObject()
-                val index = popObject()
-                target.index(index)?.let { addObject(it) }
+                val target = popObj()
+                val index = popObj()
+                target.index(index)?.let { addObj(it) }
             }
 
             CALL -> {
                 val callSpec = operands[0] as CallSpec
 
-                val arguments = ArrayList<FlamingoObject>()
-                val keywords = LinkedHashMap<String, FlamingoObject>()
+                val arguments = ArrayList<FlObject>()
+                val keywords = LinkedHashMap<String, FlObject>()
 
                 for (i in 0..<callSpec.arguments) {
-                    arguments.addFirst(popObject())
+                    arguments.addFirst(popObj())
                 }
 
                 for (keyword in callSpec.keywords.reversed()) {
-                    keywords[keyword] = popObject()
+                    keywords[keyword] = popObj()
                 }
 
-                val target = popObject()
+                val target = popObj()
 
-                val result = target.call(arguments, keywords.reversed())
-                if (result != null) addObject(result)
+                if (target is FlFunctionObj) {
+                    val locals = target.parameters.parseLocals(arguments, keywords.reversed()) ?: return
+                    addCall(target.makeFrame(locals))
+                } else {
+                    val result = target.call(arguments, keywords.reversed())
+                    if (result != null) addObj(result)
+                }
             }
 
             JUMP_IF_NULL -> {
-                if (topObject() == Null) frame.ip = (operands[0] as Jump).to - 1
+                if (topObj() == Null) frame.ip = (operands[0] as Jump).to - 1
             }
 
             BUILD_STRING -> {
                 val string = StringBuilder()
                 for (i in 0..<(operands[0] as Int)) {
-                    val stringConcat = popObject().stringConcat()
+                    val stringConcat = popObj().stringConcat()
                     stringConcat ?: return
 
                     string.insert(0, stringConcat)
                 }
-                addObject(stringOf(string.toString()))
+                addObj(stringOf(string.toString()))
             }
 
             SETUP_TRY -> {
@@ -314,79 +319,79 @@ open class Operation(val opCode: OpCode, val operands: Array<Any>) {
             }
 
             STORE_INDEX -> {
-                val target = popObject()
-                val index = popObject()
-                val value = popObject()
+                val target = popObj()
+                val index = popObj()
+                val value = popObj()
                 target.setAtIndex(index, value)
             }
 
             STORE_ATTR -> {
-                val target = popObject()
-                val value = popObject()
+                val target = popObj()
+                val value = popObj()
                 target.setAttribute(operands[0] as String, value, constant = false)
             }
 
             POP_GET_ITER -> {
-                val iterable = popObject().iter() ?: return
-                addObject(iterable)
+                val iterable = popObj().iter() ?: return
+                addObj(iterable)
             }
 
             ITER_NEXT -> {
-                val iterator = topObject()
-                val hasNext = iterator.callAttributeAssertCast("hasNextObject", FlamingoBooleanObject::class) ?: return
+                val iterator = topObj()
+                val hasNext = iterator.callAttributeAssertCast("hasNextObj", FlBooleanObj::class) ?: return
                 if (hasNext.boolean) {
-                    val next = iterator.callAttribute("nextObject") ?: return
-                    addObject(next)
+                    val next = iterator.callAttribute("nextObj") ?: return
+                    addObj(next)
                 } else {
                     frame.ip = (operands[0] as Jump).to - 1
                 }
             }
 
             BUILD_FUNCTION -> {
-                var defaults: HashMap<String, FlamingoObject>? = null
-                val codeObject = popObject() as FlamingoCodeObject
+                var defaults: HashMap<String, FlObject>? = null
+                val codeObj = popObj() as FlCodeObj
                 val partialFunction = operands[0] as PartialFunction
                 if (partialFunction.defaults != null) {
                     defaults = LinkedHashMap()
                     for (keyword in partialFunction.defaults.reversed()) {
-                        defaults[keyword] = popObject()
+                        defaults[keyword] = popObj()
                     }
                 }
 
                 val parameterSpec = ParameterSpec(
-                    codeObject.name,
+                    codeObj.name,
                     partialFunction.positionals,
                     defaults,
                     partialFunction.varargs,
                     partialFunction.varkwargs
                 )
-                addObject(FlamingoFunctionObject(codeObject, parameterSpec))
+                addObj(FlFunctionObj(codeObj, parameterSpec))
             }
 
             BUILD_RANGE -> {
-                val to = popObject()
-                val from = popObject()
-                addObject(FlamingoRangeObject(Pair(from, to)))
+                val to = popObj()
+                val from = popObj()
+                addObj(FlRangeObj(Pair(from, to)))
             }
 
             BUILD_CLASS -> {
                 val name = operands[0] as String
 
-                val codeObject = popObject() as FlamingoCodeObject
+                val codeObj = popObj() as FlCodeObj
 
                 val classFrame = OperationalFrame(
-                    "%s.<class '%s'>".format(frame.name, name), codeObject.operations
+                    "%s.<class '%s'>".format(frame.name, name), codeObj.operations
                 )
 
-                classFrame.locals = ClassNameTable(classFrame.name, codeObject.nativeClosure)
+                classFrame.locals = ClassNameTable(classFrame.name, codeObj.nativeClosure)
 
                 val result = runtime.execute(classFrame)
                 if (result.thrown != null) return
-                val supers = mutableListOf<FlamingoClass>()
+                val supers = mutableListOf<FlClass>()
                 for (i in 0..<(operands[1] as Int)) {
-                    val maybeClass = popObject()
-                    if (maybeClass !is FlamingoReflectObject) {
-                        throwObject(
+                    val maybeClass = popObj()
+                    if (maybeClass !is FlReflectObj) {
+                        throwObj(
                             "%s type object must be a class to be a super class of %s".format(
                                 maybeClass.cls.name,
                                 name
@@ -397,38 +402,38 @@ open class Operation(val opCode: OpCode, val operands: Array<Any>) {
                     supers.add(maybeClass.reflectingClass)
                 }
 
-                val cls = createUserDefinedFlamingoClass(name, supers, classFrame.locals) ?: return
+                val cls = createUserDefinedFlClass(name, supers, classFrame.locals) ?: return
 
-                addObject(cls.reflectObject)
+                addObj(cls.reflectObj)
             }
 
             LOAD_CTX -> {
-                val ctx = frame.locals.getContextObject() ?: return
-                addObject(ctx)
+                val ctx = frame.locals.getContextObj() ?: return
+                addObj(ctx)
             }
 
             BUILD_CODE -> {
-                val code = operands[0] as PartialCodeObject
-                addObject(FlamingoCodeObject(code.scope.name, code.scope.operations, code.filePath, frame.locals))
+                val code = operands[0] as PartialCodeObj
+                addObj(FlCodeObj(code.scope.name, code.scope.operations, code.filePath, frame.locals))
             }
 
             UNARY_OPERATION -> {
-                val obj = popObject()
+                val obj = popObj()
                 val type = operands[0] as UnaryOperationType
                 when (type) {
                     UnaryOperationType.NOT -> {
                         val result = obj.callAttribute("meta\$not") ?: return
-                        addObject(result)
+                        addObj(result)
                     }
 
                     UnaryOperationType.MINUS -> {
                         val result = obj.callAttribute("meta\$minus") ?: return
-                        addObject(result)
+                        addObj(result)
                     }
 
                     UnaryOperationType.PLUS -> {
                         val result = obj.callAttribute("meta\$plus") ?: return
-                        addObject(result)
+                        addObj(result)
                     }
                 }
             }

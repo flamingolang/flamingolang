@@ -1,12 +1,12 @@
 package runtime
 
-import objects.base.FlamingoObject
-import objects.base.FlamingoThrowableObject
+import objects.base.FlObject
+import objects.base.FlThrowableObj
 
 data class ExecutionResult(
     val frame: Frame?,
-    val result: FlamingoObject?,
-    val thrown: FlamingoThrowableObject?,
+    val result: FlObject?,
+    val thrown: FlThrowableObj?,
     val stackSnapshot: List<Frame>
 )
 

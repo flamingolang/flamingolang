@@ -1,15 +1,15 @@
 package objects.members
 
-import objects.base.FlamingoObject
-import objects.base.collections.FlamingoDictionaryObject
+import objects.base.FlObject
+import objects.base.collections.FlDictionaryObj
 import objects.base.stringOf
 import objects.callable.KtCallContext
 import objects.callable.KtFunction
 import objects.callable.ParameterSpec
 
-object BuiltinFunDictionaryDisplayObject : KtFunction(ParameterSpec("Dictionary.displayObject")) {
-    override fun accept(callContext: KtCallContext): FlamingoObject? {
-        val self = callContext.getObjectContextOfType(FlamingoDictionaryObject::class) ?: return null
+object BuiltinFunDictionaryDisplayObj : KtFunction(ParameterSpec("Dictionary.displayObj")) {
+    override fun accept(callContext: KtCallContext): FlObject? {
+        val self = callContext.getObjContextOfType(FlDictionaryObj::class) ?: return null
         val stringShows = mutableListOf<String>()
         for (entry in self.dictionary) {
             val valueStringShow = entry.value.stringShow() ?: return null

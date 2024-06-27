@@ -1,17 +1,17 @@
 package objects.members
 
-import objects.base.FlamingoObject
+import objects.base.FlObject
 import objects.base.True
-import objects.base.collections.FlamingoArrayObject
-import objects.base.collections.FlamingoGenericIteratorObject
+import objects.base.collections.FlArrayObj
+import objects.base.collections.FlGenericIteratorObj
 import objects.base.stringOf
 import objects.callable.KtCallContext
 import objects.callable.KtFunction
 import objects.callable.ParameterSpec
 
-object BuiltinFunArrayDisplayObject : KtFunction(ParameterSpec("Array.displayObject")) {
-    override fun accept(callContext: KtCallContext): FlamingoObject? {
-        val self = callContext.getObjectContextOfType(FlamingoArrayObject::class) ?: return null
+object BuiltinFunArrayDisplayObj : KtFunction(ParameterSpec("Array.displayObj")) {
+    override fun accept(callContext: KtCallContext): FlObject? {
+        val self = callContext.getObjContextOfType(FlArrayObj::class) ?: return null
         val stringShows = mutableListOf<String>()
         for (item in self.array) {
             val stringShow = item.stringShow() ?: return null
@@ -23,16 +23,16 @@ object BuiltinFunArrayDisplayObject : KtFunction(ParameterSpec("Array.displayObj
 
 
 object BuiltinFunArrayIsIter : KtFunction(ParameterSpec("Array.isIterable")) {
-    override fun accept(callContext: KtCallContext): FlamingoObject? {
-        callContext.getObjectContextOfType(FlamingoArrayObject::class) ?: return null
+    override fun accept(callContext: KtCallContext): FlObject? {
+        callContext.getObjContextOfType(FlArrayObj::class) ?: return null
         return True
     }
 }
 
 
 object BuiltinFunArrayIter : KtFunction(ParameterSpec("Array.iter")) {
-    override fun accept(callContext: KtCallContext): FlamingoObject? {
-        val self = callContext.getObjectContextOfType(FlamingoArrayObject::class) ?: return null
-        return FlamingoGenericIteratorObject(self.array.iterator())
+    override fun accept(callContext: KtCallContext): FlObject? {
+        val self = callContext.getObjContextOfType(FlArrayObj::class) ?: return null
+        return FlGenericIteratorObj(self.array.toList().iterator())
     }
 }

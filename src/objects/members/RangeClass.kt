@@ -1,15 +1,15 @@
 package objects.members
 
 import objects.base.*
-import objects.base.collections.FlamingoRangeObject
+import objects.base.collections.FlRangeObj
 import objects.callable.KtCallContext
 import objects.callable.KtFunction
 import objects.callable.ParameterSpec
-import runtime.throwObject
+import runtime.throwObj
 
-object BuiltinFunRangeDisplayObject : KtFunction(ParameterSpec("Range.displayObject")) {
-    override fun accept(callContext: KtCallContext): FlamingoObject? {
-        val self = callContext.getObjectContextOfType(FlamingoRangeObject::class) ?: return null
+object BuiltinFunRangeDisplayObj : KtFunction(ParameterSpec("Range.displayObj")) {
+    override fun accept(callContext: KtCallContext): FlObject? {
+        val self = callContext.getObjContextOfType(FlRangeObj::class) ?: return null
         val fromShow = self.range.first.stringShow() ?: return null
         val toShow = self.range.second.stringShow() ?: return null
         return stringOf("<%s: %s to %s>".format(self.cls.name, fromShow, toShow))
@@ -18,22 +18,22 @@ object BuiltinFunRangeDisplayObject : KtFunction(ParameterSpec("Range.displayObj
 
 
 object BuiltinFunRangeIsIter : KtFunction(ParameterSpec("Range.isIterable")) {
-    override fun accept(callContext: KtCallContext): FlamingoObject? {
-        callContext.getObjectContextOfType(FlamingoRangeObject::class) ?: return null
+    override fun accept(callContext: KtCallContext): FlObject? {
+        callContext.getObjContextOfType(FlRangeObj::class) ?: return null
         return True
     }
 }
 
 
 object BuiltinFunRangeIter : KtFunction(ParameterSpec("Range.iter")) {
-    override fun accept(callContext: KtCallContext): FlamingoObject? {
-        val self = callContext.getObjectContextOfType(FlamingoRangeObject::class) ?: return null
-        val from = self.range.first.assertCast("range from argument", FlamingoNumberObject::class) ?: return null
-        val to = self.range.second.assertCast("range to argument", FlamingoNumberObject::class) ?: return null
+    override fun accept(callContext: KtCallContext): FlObject? {
+        val self = callContext.getObjContextOfType(FlRangeObj::class) ?: return null
+        val from = self.range.first.assertCast("range from argument", FlNumberObj::class) ?: return null
+        val to = self.range.second.assertCast("range to argument", FlNumberObj::class) ?: return null
         val fromInt = from.assertGetInteger("range from argument") ?: return null
         val toInt = to.assertGetInteger("range to argument") ?: return null
         if (toInt < fromInt) {
-            throwObject(
+            throwObj(
                 "can't create a range where the last number (%d) is less than the first (%d)".format(
                     toInt,
                     fromInt
@@ -41,34 +41,34 @@ object BuiltinFunRangeIter : KtFunction(ParameterSpec("Range.iter")) {
             )
             return null
         }
-        return FlamingoRangeIterObject(fromInt, toInt)
+        return FlRangeIterObj(fromInt, toInt)
     }
 }
 
 
-class FlamingoRangeIterObject(
+class FlRangeIterObj(
     var pointer: Int,
     val to: Int,
-    cls: FlamingoClass = FlamingoRangeIterClass,
+    cls: FlClass = FlRangeIterClass,
     readOnly: Boolean = true
-) : FlamingoObject(cls, readOnly = readOnly)
+) : FlObject(cls, readOnly = readOnly)
 
-val FlamingoRangeIterClass = TrustedFlamingoClass("RangeIterator")
+val FlRangeIterClass = TrustedFlClass("RangeIterator")
 
 
-object BuiltinFunRangeIterHasNextObj : KtFunction(ParameterSpec("Range.hasNextObject")) {
-    override fun accept(callContext: KtCallContext): FlamingoObject? {
-        val self = callContext.getObjectContextOfType(FlamingoRangeIterObject::class) ?: return null
+object BuiltinFunRangeIterHasNextObj : KtFunction(ParameterSpec("Range.hasNextObj")) {
+    override fun accept(callContext: KtCallContext): FlObject? {
+        val self = callContext.getObjContextOfType(FlRangeIterObj::class) ?: return null
         return booleanOf(self.pointer <= self.to)
     }
 }
 
 
-object BuiltinFunRangeIterNextObj : KtFunction(ParameterSpec("Range.nextObject")) {
-    override fun accept(callContext: KtCallContext): FlamingoObject? {
-        val self = callContext.getObjectContextOfType(FlamingoRangeIterObject::class) ?: return null
-        val nextObject = numberOf(self.pointer.toDouble())
+object BuiltinFunRangeIterNextObj : KtFunction(ParameterSpec("Range.nextObj")) {
+    override fun accept(callContext: KtCallContext): FlObject? {
+        val self = callContext.getObjContextOfType(FlRangeIterObj::class) ?: return null
+        val nextObj = numberOf(self.pointer.toDouble())
         self.pointer++
-        return nextObject
+        return nextObj
     }
 }

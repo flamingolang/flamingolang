@@ -1,110 +1,131 @@
 package objects.members
 
 import objects.base.*
-import objects.base.collections.FlamingoArrayObject
-import objects.base.collections.FlamingoDictionaryObject
-import objects.base.collections.FlamingoListObject
-import objects.callable.FlamingoCodeObject
+import objects.base.collections.FlArrayObj
+import objects.base.collections.FlDictionaryObj
+import objects.base.collections.FlListObj
+import objects.callable.FlCodeObj
 import objects.callable.KtCallContext
 import objects.callable.KtFunction
 import objects.callable.ParameterSpec
-import runtime.throwObject
+import runtime.NameTable
+import runtime.OperationalFrame
+import runtime.execute
+import runtime.throwObj
 
 class ErrorWrapperKtFunctionAny(val name: String) :
     KtFunction(ParameterSpec(name, varargs = "args", varkwargs = "kwargs")) {
-    override fun accept(callContext: KtCallContext): FlamingoObject? {
-        val self = callContext.getObjectContext() ?: return null
-        throwObject("%s type object doesn't support %s()".format(self.cls.name, name), TypeError)
+    override fun accept(callContext: KtCallContext): FlObject? {
+        val self = callContext.getObjContext() ?: return null
+        throwObj("%s type object doesn't support %s()".format(self.cls.name, name), TypeError)
         return null
     }
 }
 
-object BuiltinFunObjDisplayObject : KtFunction(ParameterSpec("Object.displayObject")) {
-    override fun accept(callContext: KtCallContext): FlamingoObject? {
-        val self = callContext.getObjectContext() ?: return null
+object BuiltinFunObjDisplayObj : KtFunction(ParameterSpec("Obj.displayObj")) {
+    override fun accept(callContext: KtCallContext): FlObject? {
+        val self = callContext.getObjContext() ?: return null
         return stringOf("<%s 0x%x>".format(self.cls.name, self.hashCode()))
     }
 }
 
-object BuiltinFunObjToString : KtFunction(ParameterSpec("Object.toString")) {
-    override fun accept(callContext: KtCallContext): FlamingoObject? {
-        val self = callContext.getObjectContext() ?: return null
-        return self.callAttribute("meta\$displayObject")
+object BuiltinFunObjToString : KtFunction(ParameterSpec("Obj.toString")) {
+    override fun accept(callContext: KtCallContext): FlObject? {
+        val self = callContext.getObjContext() ?: return null
+        return self.callAttribute("meta\$displayObj")
     }
 }
 
 
-object BuiltinFunObjEq : KtFunction(ParameterSpec("Object.eq", listOf("other"))) {
-    override fun accept(callContext: KtCallContext): FlamingoObject? {
-        val self = callContext.getObjectContext() ?: return null
+object BuiltinFunObjEq : KtFunction(ParameterSpec("Obj.eq", listOf("other"))) {
+    override fun accept(callContext: KtCallContext): FlObject? {
+        val self = callContext.getObjContext() ?: return null
         val other = callContext.getLocal("other") ?: return null
         return booleanOf(self == other)
     }
 }
 
 
-object BuiltinFunObjNeq : KtFunction(ParameterSpec("Object.neq", listOf("other"))) {
-    override fun accept(callContext: KtCallContext): FlamingoObject? {
-        val self = callContext.getObjectContext() ?: return null
+object BuiltinFunObjNeq : KtFunction(ParameterSpec("Obj.neq", listOf("other"))) {
+    override fun accept(callContext: KtCallContext): FlObject? {
+        val self = callContext.getObjContext() ?: return null
         val other = callContext.getLocal("other") ?: return null
         val eq = self.eq(other)?.truthy() ?: return null
         return if (eq) False else True
     }
 }
 
-object BuiltinFunObjTruthy : KtFunction(ParameterSpec("Object.truthy")) {
+object BuiltinFunObjTruthy : KtFunction(ParameterSpec("Obj.truthy")) {
     override fun accept(callContext: KtCallContext) = True
 }
 
-object BuiltinFunObjNot : KtFunction(ParameterSpec("Object.truthy")) {
-    override fun accept(callContext: KtCallContext): FlamingoObject? {
-        val truthy = callContext.getObjectContext()?.truthy() ?: return null
+object BuiltinFunObjNot : KtFunction(ParameterSpec("Obj.truthy")) {
+    override fun accept(callContext: KtCallContext): FlObject? {
+        val truthy = callContext.getObjContext()?.truthy() ?: return null
         return booleanOf(!truthy)
     }
 }
 
-object BuiltinFunObjIsIter : KtFunction(ParameterSpec("Object.isIterable")) {
+object BuiltinFunObjIsIter : KtFunction(ParameterSpec("Obj.isIterable")) {
     override fun accept(callContext: KtCallContext) = False
 }
 
 
-object BuiltinFunObjGetClass : KtFunction(ParameterSpec("Object.getClass")) {
-    override fun accept(callContext: KtCallContext): FlamingoObject? {
-        val self = callContext.getObjectContext() ?: return null
-        return self.cls.reflectObject
+object BuiltinFunObjGetClass : KtFunction(ParameterSpec("Obj.getClass")) {
+    override fun accept(callContext: KtCallContext): FlObject? {
+        val self = callContext.getObjContext() ?: return null
+        return self.cls.reflectObj
     }
 }
 
 
-object BuiltinFunObjLet : KtFunction(ParameterSpec("Object.let", listOf("lambda"))) {
-    override fun accept(callContext: KtCallContext): FlamingoObject? {
-        val self = callContext.getObjectContext() ?: return null
-        val lambda = callContext.getLocalOfType("lambda", FlamingoCodeObject::class) ?: return null
+object BuiltinFunObjLet : KtFunction(ParameterSpec("Obj.let", listOf("lambda"))) {
+    override fun accept(callContext: KtCallContext): FlObject? {
+        val self = callContext.getObjContext() ?: return null
+        val lambda = callContext.getLocalOfType("lambda", FlCodeObj::class) ?: return null
         return lambda.callLetting(mapOf(Pair("it", self)))
     }
 }
 
 
-object BuiltinFunObjLetIf : KtFunction(ParameterSpec("Object.letIf", listOf("condition", "lambda"))) {
-    override fun accept(callContext: KtCallContext): FlamingoObject? {
-        val self = callContext.getObjectContext() ?: return null
-        val condition = callContext.getLocalOfType("condition", FlamingoCodeObject::class)
+class SubjectNameTable(name: String, superTable: NameTable?, context: FlObject) : NameTable(name, superTable, context) {
+    override fun getOrDefault(name: String, default: FlObject?): FlObject? {
+        context?.getAttributeOrNull(name)?.let { return it }
+        return super.getOrDefault(name, default)
+    }
+}
+
+
+object BuiltinFunObjLetContext : KtFunction(ParameterSpec("Obj.let", listOf("lambda"))) {
+    override fun accept(callContext: KtCallContext): FlObject? {
+        val self = callContext.getObjContext() ?: return null
+        val lambda = callContext.getLocalOfType("lambda", FlCodeObj::class) ?: return null
+        val frame = OperationalFrame(lambda.name, lambda.operations, closure = SubjectNameTable(lambda.name, lambda.nativeClosure, self), filePath = lambda.filePath)
+        return execute(frame).result
+    }
+}
+
+
+object BuiltinFunObjLetIf : KtFunction(ParameterSpec("Obj.letIf", listOf("condition", "lambda"))) {
+    override fun accept(callContext: KtCallContext): FlObject? {
+        val self = callContext.getObjContext() ?: return null
+        val condition = callContext.getLocalOfType("condition", FlCodeObj::class)
             ?.callLetting(mapOf(Pair("it", self)))
             ?.truthy() ?: return null
         if (condition)
-            return callContext.getLocalOfType("lambda", FlamingoCodeObject::class)
+            return callContext.getLocalOfType("lambda", FlCodeObj::class)
                 ?.callLetting(mapOf(Pair("it", self)))
         return self
     }
 }
 
-object BuiltinFunObjInstanceOf : KtFunction(ParameterSpec("Object.instanceOf", varargs = "classes")) {
-    override fun accept(callContext: KtCallContext): FlamingoObject? {
-        val self = callContext.getObjectContext() ?: return null
-        val classes = callContext.getLocalOfType("classes", FlamingoListObject::class) ?: return null
+object BuiltinFunObjInstanceOf : KtFunction(ParameterSpec("Obj.instanceOf", varargs = "classes")) {
+    override fun accept(callContext: KtCallContext): FlObject? {
+        val self = callContext.getObjContext() ?: return null
+        val classes = callContext.getLocalOfType("classes", FlListObj::class) ?: return null
 
         for (cls in classes.list) {
-            val clsClass = cls.assertCast("classes parameter item", FlamingoReflectObject::class) ?: return null
+            val clsClass = cls.assertCast("classes parameter item", FlReflectObj::class) ?: return null
             if (self.isOfClass(clsClass)) return True
         }
 
@@ -113,20 +134,20 @@ object BuiltinFunObjInstanceOf : KtFunction(ParameterSpec("Object.instanceOf", v
 }
 
 
-object BuiltinFunObjAro : KtFunction(ParameterSpec("Object.aro")) {
-    override fun accept(callContext: KtCallContext): FlamingoObject? {
-        val self = callContext.getObjectContext() ?: return null
-        return FlamingoArrayObject(self.cls.aro.map { it.reflectObject }.toTypedArray())
+object BuiltinFunObjAro : KtFunction(ParameterSpec("Obj.aro")) {
+    override fun accept(callContext: KtCallContext): FlObject? {
+        val self = callContext.getObjContext() ?: return null
+        return FlArrayObj(self.cls.aro.map { it.reflectObj }.toTypedArray())
     }
 }
 
 
-object BuiltinFunObjExplicitCall : KtFunction(ParameterSpec("Object.explicitCall", listOf("arguments", "keywords"))) {
-    override fun accept(callContext: KtCallContext): FlamingoObject? {
-        val self = callContext.getObjectContext() ?: return null
-        val arguments = callContext.getLocalOfType("arguments", FlamingoListObject::class)?.list ?: return null
+object BuiltinFunObjExplicitCall : KtFunction(ParameterSpec("Obj.explicitCall", listOf("arguments", "keywords"))) {
+    override fun accept(callContext: KtCallContext): FlObject? {
+        val self = callContext.getObjContext() ?: return null
+        val arguments = callContext.getLocalOfType("arguments", FlListObj::class)?.list ?: return null
         val keywords =
-            callContext.getLocalOfType("keywords", FlamingoDictionaryObject::class)?.dictionary ?: return null
+            callContext.getLocalOfType("keywords", FlDictionaryObj::class)?.dictionary ?: return null
         return self.call(arguments, keywords)
     }
 }

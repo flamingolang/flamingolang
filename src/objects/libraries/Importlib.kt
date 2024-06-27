@@ -2,7 +2,7 @@ package objects.libraries
 
 import compile
 import objects.base.*
-import objects.callable.FlamingoCodeObject
+import objects.callable.FlCodeObj
 import objects.callable.KtCallContext
 import objects.callable.KtFunction
 import objects.callable.ParameterSpec
@@ -19,40 +19,40 @@ import kotlin.io.path.*
 fun peekCall(): Frame? {
     if (vmCallStack.size > 1) return vmCallStack.elementAt(vmCallStack.size - 2)
 
-    throwObject("could not determine import context successfully", ImportFatality)
+    throwObj("could not determine import context successfully", ImportFatality)
     return null
 }
 
-open class FlamingoModuleObject(val name: String, val filePath: String, cls: FlamingoClass = FlamingoModuleClass, readOnly: Boolean = true) : FlamingoObject(cls, readOnly = readOnly) {
-    val moduleAttributes = HashMap<String, FlamingoObject>()
+open class FlModuleObj(val name: String, val filePath: String, cls: FlClass = FlModuleClass, readOnly: Boolean = true) : FlObject(cls, readOnly = readOnly) {
+    val moduleAttributes = HashMap<String, FlObject>()
 
-    override fun getAttributeOrNull(name: String, aroCheck: Boolean): FlamingoObject? {
+    override fun getAttributeOrNull(name: String, aroCheck: Boolean): FlObject? {
         moduleAttributes[name]?.let { return it }
         return super.getAttributeOrNull(name, aroCheck)
     }
 }
-val FlamingoModuleClass = TrustedFlamingoClass("module")
+val FlModuleClass = TrustedFlClass("module")
 
 
-object BuiltinFunModDisplayObject : KtFunction(ParameterSpec("Module.displayObject")) {
-    override fun accept(callContext: KtCallContext): FlamingoObject? {
-        val self = callContext.getObjectContextOfType(FlamingoModuleObject::class) ?: return null
+object BuiltinFunModDisplayObj : KtFunction(ParameterSpec("Module.displayObj")) {
+    override fun accept(callContext: KtCallContext): FlObject? {
+        val self = callContext.getObjContextOfType(FlModuleObj::class) ?: return null
         return stringOf("<%s '%s'>".format(self.cls.name, self.name))
     }
 }
 
 object BuiltinFunModGetPath : KtFunction(ParameterSpec("Module.getPath")) {
-    override fun accept(callContext: KtCallContext): FlamingoObject? {
-        val self = callContext.getObjectContextOfType(FlamingoModuleObject::class) ?: return null
+    override fun accept(callContext: KtCallContext): FlObject? {
+        val self = callContext.getObjContextOfType(FlModuleObj::class) ?: return null
         return stringOf(self.filePath)
     }
 }
 
 
 object BuiltinFunModExport : KtFunction(ParameterSpec("Module.export", listOf("namespace"))) {
-    override fun accept(callContext: KtCallContext): FlamingoObject? {
-        val self = callContext.getObjectContextOfType(FlamingoModuleObject::class) ?: return null
-        val namespace = callContext.getLocalOfType("namespace", FlamingoCodeObject::class) ?: return null
+    override fun accept(callContext: KtCallContext): FlObject? {
+        val self = callContext.getObjContextOfType(FlModuleObj::class) ?: return null
+        val namespace = callContext.getLocalOfType("namespace", FlCodeObj::class) ?: return null
 
         val exportTo = peekCall() ?: return null
 
@@ -63,8 +63,7 @@ object BuiltinFunModExport : KtFunction(ParameterSpec("Module.export", listOf("n
             moduleNameTable.set(entry.key, entry.value, true) ?: return null
         }
 
-        val execution = execute(frame)
-        if (execution.result == null) return null
+        execute(frame).result ?: return null
 
         for (entry in frame.locals.entries) {
             exportTo.locals.set(entry.key, entry.value.value, entry.value.constant) ?: return null
@@ -76,8 +75,8 @@ object BuiltinFunModExport : KtFunction(ParameterSpec("Module.export", listOf("n
 
 
 
-val fileModules = HashMap<String, FlamingoModuleObject>()
-val builtinModules = HashMap<String, FlamingoModuleObject>()
+val fileModules = HashMap<String, FlModuleObj>()
+val builtinModules = HashMap<String, FlModuleObj>()
 
 val importStack = Stack<String>()
 
@@ -86,23 +85,23 @@ val RELATIVE_SMART_IMPORT = "(^(\\.\\.)*)([a-zA-Z0-9_\\-\$]+(\\.[a-zA-Z0-9_\\-\$
 val RELATIVE_IMPORT = "^(\\.\\./)*([a-zA-Z0-9_\\-\$] ?)+(/[a-zA-Z0-9_\\-\$] ?)*\$".toRegex()
 
 
-fun importModuleFromPath(name: String, path: String): FlamingoModuleObject? {
+fun importModuleFromPath(name: String, path: String): FlModuleObj? {
     if (importStack.count { it == path } > 10) {
-        throwObject("detected probable circular import (10)", ImportFatality)
+        throwObj("detected probable circular import (10)", ImportFatality)
         return null
     }
     importStack.push(path)
 
     val file = File(path)
     if (!file.exists()) {
-        throwObject("there is no '%s'".format(path), ImportFatality)
+        throwObj("there is no '%s'".format(path), ImportFatality)
         return null
     }
 
     val frame = compile(name, readFile(file), filePath = path) ?: return null
     execute(frame).thrown?.let { return null }
 
-    val module = FlamingoModuleObject(name, path)
+    val module = FlModuleObj(name, path)
 
     for (entry in frame.locals.entries) {
         module.moduleAttributes[entry.key] = entry.value.value
@@ -114,27 +113,27 @@ fun importModuleFromPath(name: String, path: String): FlamingoModuleObject? {
 
 
 object BuiltinFunImport : KtFunction(ParameterSpec("import", listOf("path"))) {
-    override fun accept(callContext: KtCallContext): FlamingoObject? {
-        val path = callContext.getLocalOfType("path", FlamingoStringObject::class)?.string ?: return null
+    override fun accept(callContext: KtCallContext): FlObject? {
+        val path = callContext.getLocalOfType("path", FlStringObj::class)?.string ?: return null
 
         val importBuiltinPath = BUILTIN_IMPORT.matchEntire(path)?.groups?.get(1)?.value
         if (importBuiltinPath != null) {
             builtinModules[importBuiltinPath] ?. let { return it }
 
-            throwObject("there is no builtin module named '%s'".format(importBuiltinPath), ImportFatality)
+            throwObj("there is no builtin module named '%s'".format(importBuiltinPath), ImportFatality)
             return null
         }
 
         val importBase = peekCall() ?: return null
 
         if (importBase !is OperationalFrame || importBase.filePath == null) {
-            throwObject("could not automatically resolve path for import, please use a different import function", ImportFatality)
+            throwObj("could not automatically resolve path for import, please use a different import function", ImportFatality)
             return null
         }
 
         val pathCurr = Path.of(importBase.filePath).parent
         if (pathCurr.notExists()) {
-            throwObject("base import path '%s' does not exist".format(importBase.filePath), ImportFatality)
+            throwObj("base import path '%s' does not exist".format(importBase.filePath), ImportFatality)
             return null
         }
 
@@ -153,7 +152,7 @@ object BuiltinFunImport : KtFunction(ParameterSpec("import", listOf("path"))) {
         } else {
             val relImportPath = RELATIVE_IMPORT.matchEntire(path)?.groups?.get(1)?.value
             if (relImportPath == null) {
-                throwObject("malformed import path '%s'".format(path), ImportFatality)
+                throwObj("malformed import path '%s'".format(path), ImportFatality)
                 return null
             }
             finalRelPath.append(relImportPath)
@@ -172,7 +171,7 @@ object BuiltinFunImport : KtFunction(ParameterSpec("import", listOf("path"))) {
         }
 
         if (pathFinal.toPath().notExists()) {
-            throwObject("final import path '%s' does not exist".format(pathFinal.path), ImportFatality)
+            throwObj("final import path '%s' does not exist".format(pathFinal.path), ImportFatality)
             return null
         }
 

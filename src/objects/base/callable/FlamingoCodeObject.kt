@@ -1,27 +1,27 @@
 package objects.callable
 
-import objects.base.FlamingoClass
-import objects.base.FlamingoObject
-import objects.base.TrustedFlamingoClass
+import objects.base.FlClass
+import objects.base.FlObject
+import objects.base.TrustedFlClass
 import runtime.NameTable
 import runtime.Operation
 import runtime.OperationalFrame
 import runtime.execute
 
-class FlamingoCodeObject(
+class FlCodeObj(
     val name: String,
     val operations: Collection<Operation>,
     var filePath: String? = null,
     var nativeClosure: NameTable? = null,
-    cls: FlamingoClass = FlamingoCodeObjectClass,
+    cls: FlClass = FlCodeObjClass,
     readOnly: Boolean = true
-) : FlamingoObject(cls, readOnly) {
-    fun callLetting(initLocals: Map<String, FlamingoObject>? = null): FlamingoObject? {
+) : FlObject(cls, readOnly) {
+    fun callLetting(initLocals: Map<String, FlObject>? = null): FlObject? {
         val execution = execute(getFrame(initLocals))
         execution.result?.let { return it }
         return null
     }
-    fun getFrame(initLocals: Map<String, FlamingoObject>? = null) = OperationalFrame(name, operations, closure = nativeClosure, initLocals = initLocals)
+    fun getFrame(initLocals: Map<String, FlObject>? = null) = OperationalFrame(name, operations, closure = nativeClosure, initLocals = initLocals, filePath = filePath)
 }
 
-object FlamingoCodeObjectClass : TrustedFlamingoClass("Code")
+object FlCodeObjClass : TrustedFlClass("Code")

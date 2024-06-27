@@ -6,7 +6,7 @@ import objects.callable.KtCallContext
 import objects.callable.KtFunction
 import objects.callable.ParameterSpec
 
-object BuiltinFunNullDisplayObject : KtFunction(ParameterSpec("Null.displayObject")) {
+object BuiltinFunNullDisplayObj : KtFunction(ParameterSpec("Null.displayObj")) {
     override fun accept(callContext: KtCallContext) = stringOf("null")
 }
 

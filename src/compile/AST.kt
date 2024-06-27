@@ -1,6 +1,6 @@
 package compile
 
-import objects.base.FlamingoCompilerErrorObject
+import objects.base.FlCompilerErrorObj
 
 open class Node(val token: Token)
 
@@ -32,7 +32,7 @@ class CodeSnippet(token: Token, val snippet: Node) : Node(token)
 class TrueConstant(token: Token) : Node(token)
 class FalseConstant(token: Token) : Node(token)
 class NullConstant(token: Token) : Node(token)
-class ContextObject(token: Token) : Node(token)
+class ContextObj(token: Token) : Node(token)
 class ListConstruct(token: Token, val items: Collection<Node>) : Node(token)
 class ArrayConstruct(token: Token, val items: Collection<Node>) : Node(token)
 class BuildRange(token: Token, val from: Node, val to: Node) : Node(token)
@@ -45,9 +45,9 @@ class UnaryOperation(token: Token, val type: UnaryOperationType, val expression:
 class BinaryAnd(token: Token, val left: Node, val right: Node) : Node(token)
 class BinaryOr(token: Token, val left: Node, val right: Node) : Node(token)
 
-class GetAttribute(token: Token, val name: String, val from: Node, val ifObjectNotNull: Boolean = false) : Node(token)
-class IndexObject(token: Token, val obj: Node, val index: Node) : Node(token)
-class CallObject(
+class GetAttribute(token: Token, val name: String, val from: Node, val ifObjNotNull: Boolean = false) : Node(token)
+class IndexObj(token: Token, val obj: Node, val index: Node) : Node(token)
+class CallObj(
     token: Token,
     val obj: Node,
     val arguments: MutableList<Node>,
@@ -166,7 +166,7 @@ fun printNode(node: Node) {
 
         }
 
-        is ContextObject -> {
+        is ContextObj -> {
             printAll(node, "self")
 
         }
@@ -207,16 +207,16 @@ fun printNode(node: Node) {
         }
 
         is GetAttribute -> {
-            printAll(node, node.name, node.from, node.ifObjectNotNull)
+            printAll(node, node.name, node.from, node.ifObjNotNull)
 
         }
 
-        is IndexObject -> {
+        is IndexObj -> {
             printAll(node, node.obj, node.index)
 
         }
 
-        is CallObject -> {
+        is CallObj -> {
             printAll(node, node.obj, node.arguments, node.keywords, node.keywordValues)
 
         }
@@ -327,7 +327,7 @@ abstract class AbstractNodeVisitor {
             is TrueConstant -> visitTrueConstant()
             is FalseConstant -> visitFalseConstant()
             is NullConstant -> visitNullConstant()
-            is ContextObject -> visitContextObject()
+            is ContextObj -> visitContextObj()
             is BuildRange -> visitBuildRange(visitor.from, visitor.to)
 
             is ListConstruct -> visitList(visitor.items)
@@ -339,9 +339,9 @@ abstract class AbstractNodeVisitor {
             is BinaryAnd -> visitBinaryAnd(visitor.left, visitor.right)
             is BinaryOr -> visitBinaryOr(visitor.left, visitor.right)
 
-            is GetAttribute -> visitGetAttribute(visitor.name, visitor.from, visitor.ifObjectNotNull)
-            is IndexObject -> visitIndexObject(visitor.obj, visitor.index)
-            is CallObject -> visitCallObject(visitor.obj, visitor.arguments, visitor.keywords, visitor.keywordValues)
+            is GetAttribute -> visitGetAttribute(visitor.name, visitor.from, visitor.ifObjNotNull)
+            is IndexObj -> visitIndexObj(visitor.obj, visitor.index)
+            is CallObj -> visitCallObj(visitor.obj, visitor.arguments, visitor.keywords, visitor.keywordValues)
             is CallAttributeIfNotNull -> visitCallAttributeIfNotNull(
                 visitor.obj,
                 visitor.name,
@@ -368,7 +368,7 @@ abstract class AbstractNodeVisitor {
             is SetAtIndex -> visitSetAtIndex(visitor.obj, visitor.index, visitor.value)
 
             else -> throw CompilerEscape(
-                FlamingoCompilerErrorObject("unexpected visitor '%s'".format(visitor::class.simpleName), visitor.token)
+                FlCompilerErrorObj("unexpected visitor '%s'".format(visitor::class.simpleName), visitor.token)
             )
         }
         currentToken = initToken
@@ -404,7 +404,7 @@ abstract class AbstractNodeVisitor {
     abstract fun visitTrueConstant()
     abstract fun visitFalseConstant()
     abstract fun visitNullConstant()
-    abstract fun visitContextObject()
+    abstract fun visitContextObj()
     abstract fun visitBuildRange(from: Node, to: Node)
 
     abstract fun visitList(items: Collection<Node>)
@@ -416,9 +416,9 @@ abstract class AbstractNodeVisitor {
     abstract fun visitBinaryAnd(left: Node, right: Node)
     abstract fun visitBinaryOr(left: Node, right: Node)
 
-    abstract fun visitGetAttribute(name: String, from: Node, ifObjectNotNull: Boolean)
-    abstract fun visitIndexObject(obj: Node, index: Node)
-    abstract fun visitCallObject(
+    abstract fun visitGetAttribute(name: String, from: Node, ifObjNotNull: Boolean)
+    abstract fun visitIndexObj(obj: Node, index: Node)
+    abstract fun visitCallObj(
         obj: Node,
         arguments: MutableList<Node>,
         keywords: List<String>,
