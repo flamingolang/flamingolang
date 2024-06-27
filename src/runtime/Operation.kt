@@ -25,6 +25,7 @@ import runtime.OpCode.*
  * @property POP_GET_ITER
  * @property BUILD_RANGE
  * @property LOAD_CTX
+ * @property LOAD_CTX_SUP
  *
  * @property LOAD_CONST (obj: FlObj)
  * @property JUMP_ABSOLUTE (to: Int)
@@ -58,7 +59,7 @@ import runtime.OpCode.*
  */
 enum class OpCode {
     // take no operands
-    RETURN_VALUE, THROW_ERROR, POP_TOP, FINISH_TRY, STORE_INDEX, POP_GET_ITER, BUILD_RANGE, LOAD_CTX,
+    RETURN_VALUE, THROW_ERROR, POP_TOP, FINISH_TRY, STORE_INDEX, POP_GET_ITER, BUILD_RANGE, LOAD_CTX, LOAD_CTX_SUP,
 
     // take 1 operand
     LOAD_CONST, JUMP_ABSOLUTE, LOAD_NAME, JUMP_IF_TRUE, JUMP_IF_FALSE, STORE_NAME_LAZY, STORE_NAME, STORE_CONST, BUILD_LIST, BUILD_ARRAY, GET_ATTR, POP_JUMP_IF_FALSE,
@@ -436,6 +437,11 @@ open class Operation(val opCode: OpCode, val operands: Array<Any>) {
                         addObj(result)
                     }
                 }
+            }
+
+            LOAD_CTX_SUP -> {
+                val ctxSuper = frame.locals.getContextSuperObj() ?: return
+                addObj(ctxSuper)
             }
         }
     }

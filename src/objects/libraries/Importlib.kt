@@ -26,9 +26,9 @@ fun peekCall(): Frame? {
 open class FlModuleObj(val name: String, val filePath: String, cls: FlClass = FlModuleClass, readOnly: Boolean = true) : FlObject(cls, readOnly = readOnly) {
     val moduleAttributes = HashMap<String, FlObject>()
 
-    override fun getAttributeOrNull(name: String, aroCheck: Boolean): FlObject? {
+    override fun getAttributeOrNull(name: String, aroCheck: Boolean, bind: Boolean): FlObject? {
         moduleAttributes[name]?.let { return it }
-        return super.getAttributeOrNull(name, aroCheck)
+        return super.getAttributeOrNull(name, aroCheck, bind = bind)
     }
 }
 val FlModuleClass = TrustedFlClass("module")

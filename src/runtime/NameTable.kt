@@ -3,6 +3,7 @@ package runtime
 import builtins
 import objects.base.AssignmentError
 import objects.base.FlObject
+import objects.base.FlSuperObj
 import objects.base.NameError
 
 /**
@@ -11,8 +12,13 @@ import objects.base.NameError
 data class NameTableEntry(var value: FlObject, val constant: Boolean = false)
 
 
-open class NameTable(val name: String, private val superTable: NameTable? = null, var context: FlObject? = null) {
+open class NameTable(val name: String, private val superTable: NameTable? = null, private var context: FlObject? = null) {
     val entries = HashMap<String, NameTableEntry>()
+    private var contextSuper: FlSuperObj? = null
+
+    init {
+        context ?. let { contextSuper = it.createSuper() }
+    }
 
     /**
      * @param name the name to look for in the name table
@@ -40,6 +46,12 @@ open class NameTable(val name: String, private val superTable: NameTable? = null
         return null
     }
 
+    open fun getContextSuperObjOrNull(): FlSuperObj? {
+        contextSuper?.let { return it }
+        superTable?.getContextSuperObjOrNull()?.let { return it }
+        return null
+    }
+
     open fun getContextObjOrNull(): FlObject? {
         context?.let { return it }
         superTable?.getContextObjOrNull()?.let { return it }
@@ -52,6 +64,15 @@ open class NameTable(val name: String, private val superTable: NameTable? = null
     open fun getContextObj(): FlObject? {
         getContextObjOrNull()?.let { return it }
         throwObj("no context set in %s".format(fullName()), NameError)
+        return null
+    }
+
+    /**
+     * @return the context super value or sets an error and returns null
+     */
+    open fun getContextSuperObj(): FlSuperObj? {
+        getContextSuperObjOrNull()?.let { return it }
+        throwObj("no context (or super) set in %s".format(fullName()), NameError)
         return null
     }
 
@@ -82,6 +103,11 @@ open class NameTable(val name: String, private val superTable: NameTable? = null
      * @return a string representing the name of the table which will be used in errors
      */
     private fun fullName(): String = (superTable?.let { "%s.%s".format(it.fullName(), name) }) ?: name
+
+    fun updateContext(newContext: FlObject) {
+        context = newContext
+        contextSuper = newContext.createSuper()
+    }
 }
 
 class ClassNameTable(name: String, superTable: NameTable? = null, context: FlObject? = null) :

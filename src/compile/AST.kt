@@ -33,6 +33,7 @@ class TrueConstant(token: Token) : Node(token)
 class FalseConstant(token: Token) : Node(token)
 class NullConstant(token: Token) : Node(token)
 class ContextObj(token: Token) : Node(token)
+class ContextSuperObj(token: Token) : Node(token)
 class ListConstruct(token: Token, val items: Collection<Node>) : Node(token)
 class ArrayConstruct(token: Token, val items: Collection<Node>) : Node(token)
 class BuildRange(token: Token, val from: Node, val to: Node) : Node(token)
@@ -167,6 +168,11 @@ fun printNode(node: Node) {
         }
 
         is ContextObj -> {
+            printAll(node, "self")
+
+        }
+
+        is ContextSuperObj -> {
             printAll(node, "self")
 
         }
@@ -328,6 +334,7 @@ abstract class AbstractNodeVisitor {
             is FalseConstant -> visitFalseConstant()
             is NullConstant -> visitNullConstant()
             is ContextObj -> visitContextObj()
+            is ContextSuperObj -> visitContextSuperObj()
             is BuildRange -> visitBuildRange(visitor.from, visitor.to)
 
             is ListConstruct -> visitList(visitor.items)
@@ -405,6 +412,7 @@ abstract class AbstractNodeVisitor {
     abstract fun visitFalseConstant()
     abstract fun visitNullConstant()
     abstract fun visitContextObj()
+    abstract fun visitContextSuperObj()
     abstract fun visitBuildRange(from: Node, to: Node)
 
     abstract fun visitList(items: Collection<Node>)

@@ -7,7 +7,7 @@ import objects.callable.FlBuiltinObj
 import objects.callable.FlCallableClass
 import objects.callable.FlCodeObjClass
 import objects.libraries.*
-import objects.members.*
+import objects.methods.*
 import runtime.*
 import java.io.File
 import java.nio.file.Path
@@ -143,7 +143,7 @@ fun initFl() {
     // object
     FlObjClass.let {
         it.setClassAttribute("meta\$init", FlBuiltinObj(BuiltinFunObjInit))
-        it.setClassAttribute("meta\$displayObj", FlBuiltinObj(BuiltinFunObjDisplayObj))
+        it.setClassAttribute("meta\$displayObject", FlBuiltinObj(BuiltinFunObjDisplayObj))
         it.setClassAttribute("meta\$toString", FlBuiltinObj(BuiltinFunObjToString))
         it.setClassAttribute("meta\$isIterable", FlBuiltinObj(BuiltinFunObjIsIter))
         it.setClassAttribute("meta\$eq", FlBuiltinObj(BuiltinFunObjEq))
@@ -180,25 +180,32 @@ fun initFl() {
 
         it.setClassAttribute("explicitCall", FlBuiltinObj(BuiltinFunObjExplicitCall))
     }
+    // super objects
+    FlSuperClass.let {
+        it.setClassAttribute("meta\$displayObject", FlBuiltinObj(BuiltinFunSuperDisplayObj))
+        it.setClassAttribute("meta\$call", FlBuiltinObj(BuiltinFunSuperCall))
+    }
     // reflect objects
     FlReflectClass.let {
         it.setClassAttribute("meta\$new", FlBuiltinObj(BuiltinFunClsNew))
 
         it.setClassAttribute("meta\$call", FlBuiltinObj(BuiltinFunClsCall))
-        it.setClassAttribute("meta\$displayObj", FlBuiltinObj(BuiltinFunClsDisplayObj))
+        it.setClassAttribute("meta\$displayObject", FlBuiltinObj(BuiltinFunClsDisplayObj))
+
+        it.setClassAttribute("getName", FlBuiltinObj(BuiltinFunClsGetName))
     }
     // callable
     FlCallableClass.setClassAttribute("meta\$call", FlBuiltinObj(BuiltinFunCallableCall))
-    FlCallableClass.setClassAttribute("meta\$displayObj", FlBuiltinObj(BuiltinFunCallableDisplayObj))
+    FlCallableClass.setClassAttribute("meta\$displayObject", FlBuiltinObj(BuiltinFunCallableDisplayObj))
     // code object
-    FlCodeObjClass.setClassAttribute("meta\$displayObj", FlBuiltinObj(BuiltinFunCodeObjDisplayObj))
+    FlCodeObjClass.setClassAttribute("meta\$displayObject", FlBuiltinObj(BuiltinFunCodeObjDisplayObj))
     FlCodeObjClass.setClassAttribute("callLetting", FlBuiltinObj(BuiltinFunCodeObjCallLetting))
     // generic iterator
     FlGenericIteratorClass.setClassAttribute("hasNextObj", FlBuiltinObj(BuiltinFunGenIterHasNextObj))
     FlGenericIteratorClass.setClassAttribute("nextObj", FlBuiltinObj(BuiltinFunGenIterNextObj))
     // list
     FlListClass.let {
-        it.setClassAttribute("meta\$displayObj", FlBuiltinObj(BuiltinFunListDisplayObj))
+        it.setClassAttribute("meta\$displayObject", FlBuiltinObj(BuiltinFunListDisplayObj))
         it.setClassAttribute("meta\$iter", FlBuiltinObj(BuiltinFunListIter))
         it.setClassAttribute("meta\$isIterable", FlBuiltinObj(BuiltinFunListIsIter))
         it.setClassAttribute("meta\$index", FlBuiltinObj(BuiltinFunListIndex))
@@ -218,23 +225,23 @@ fun initFl() {
         it.setClassAttribute("where", FlBuiltinObj(BuiltinFunListWhere))
     }
     // array
-    FlArrayClass.setClassAttribute("meta\$displayObj", FlBuiltinObj(BuiltinFunArrayDisplayObj))
+    FlArrayClass.setClassAttribute("meta\$displayObject", FlBuiltinObj(BuiltinFunArrayDisplayObj))
     FlArrayClass.setClassAttribute("meta\$iter", FlBuiltinObj(BuiltinFunArrayIter))
     FlArrayClass.setClassAttribute("meta\$isIterable", FlBuiltinObj(BuiltinFunArrayIsIter))
     // range
-    FlRangeClass.setClassAttribute("meta\$displayObj", FlBuiltinObj(BuiltinFunRangeDisplayObj))
+    FlRangeClass.setClassAttribute("meta\$displayObject", FlBuiltinObj(BuiltinFunRangeDisplayObj))
     FlRangeClass.setClassAttribute("meta\$iter", FlBuiltinObj(BuiltinFunRangeIter))
     FlRangeClass.setClassAttribute("meta\$isIterable", FlBuiltinObj(BuiltinFunRangeIsIter))
     FlRangeIterClass.setClassAttribute("hasNextObj", FlBuiltinObj(BuiltinFunRangeIterHasNextObj))
     FlRangeIterClass.setClassAttribute("nextObj", FlBuiltinObj(BuiltinFunRangeIterNextObj))
     // dictionary
     FlDictionaryClass.setClassAttribute(
-        "meta\$displayObj",
+        "meta\$displayObject",
         FlBuiltinObj(BuiltinFunDictionaryDisplayObj)
     )
     // number
     FlNumberClass.let {
-        it.setClassAttribute("meta\$displayObj", FlBuiltinObj(BuiltinFunNumberDisplayObj))
+        it.setClassAttribute("meta\$displayObject", FlBuiltinObj(BuiltinFunNumberDisplayObj))
         it.setClassAttribute("meta\$add", FlBuiltinObj(BuiltinFunNumberAdd))
         it.setClassAttribute("meta\$sub", FlBuiltinObj(BuiltinFunNumberSub))
         it.setClassAttribute("meta\$mul", FlBuiltinObj(BuiltinFunNumberMul))
@@ -260,7 +267,7 @@ fun initFl() {
     }
     // string
     FlStringClass.let {
-        it.setClassAttribute("meta\$displayObj", FlBuiltinObj(BuiltinFunStringDisplayObj))
+        it.setClassAttribute("meta\$displayObject", FlBuiltinObj(BuiltinFunStringDisplayObj))
         it.setClassAttribute("meta\$toString", FlBuiltinObj(BuiltinFunStringToString))
         it.setClassAttribute("meta\$add", FlBuiltinObj(BuiltinFunStringAdd))
         it.setClassAttribute("meta\$mul", FlBuiltinObj(BuiltinFunStringMul))
@@ -271,17 +278,17 @@ fun initFl() {
     }
     // boolean
     FlBooleanClass.let {
-        it.setClassAttribute("meta\$displayObj", FlBuiltinObj(BuiltinFunBoolDisplayObj))
+        it.setClassAttribute("meta\$displayObject", FlBuiltinObj(BuiltinFunBoolDisplayObj))
         it.setClassAttribute("meta\$truthy", FlBuiltinObj(BuiltinFunBoolTruthy))
     }
     // null
     FlNullClass.let {
-        it.setClassAttribute("meta\$displayObj", FlBuiltinObj(BuiltinFunNullDisplayObj))
+        it.setClassAttribute("meta\$displayObject", FlBuiltinObj(BuiltinFunNullDisplayObj))
         it.setClassAttribute("meta\$truthy", FlBuiltinObj(BuiltinFunNullTruthy))
     }
     // module
     FlModuleClass.let {
-        it.setClassAttribute("meta\$displayObj", FlBuiltinObj(BuiltinFunModDisplayObj))
+        it.setClassAttribute("meta\$displayObject", FlBuiltinObj(BuiltinFunModDisplayObj))
 
         it.setClassAttribute("export", FlBuiltinObj(BuiltinFunModExport))
         it.setClassAttribute("getPath", FlBuiltinObj(BuiltinFunModGetPath))

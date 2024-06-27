@@ -135,7 +135,7 @@ fun printError(error: FlThrowableObj, stackSnapshot: Collection<Frame>) {
                     continue
                 }
             } else if (frame is BuiltinFunctionFrame) {
-                val contextObj = frame.locals.context
+                val contextObj = frame.locals.getContextObjOrNull()
                 val context = if (contextObj != null) " of %s".format(contextObj.cls.name) else ""
                 printRedLine("    in internal %s%s".format(builtinFunctionFrameGlance(frame), context))
                 printRedLine("        ...")

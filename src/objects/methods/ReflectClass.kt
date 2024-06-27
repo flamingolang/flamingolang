@@ -1,4 +1,4 @@
-package objects.members
+package objects.methods
 
 import objects.base.*
 import objects.base.collections.FlArrayObj
@@ -44,6 +44,15 @@ object BuiltinFunClsNew : KtFunction(ParameterSpec("Class.new")) {
         return FlObject(self.reflectingClass, readOnly = false)
     }
 }
+
+
+object BuiltinFunClsGetName : KtFunction(ParameterSpec("Class.getName")) {
+    override fun accept(callContext: KtCallContext): FlObject? {
+        val self = callContext.getObjContextOfType(FlReflectObj::class) ?: return null
+        return stringOf(self.reflectingClass.name)
+    }
+}
+
 
 
 object BuiltinFunClsNewClass : KtFunction(ParameterSpec("Class.new", listOf("name", "bases", "attributes"))) {

@@ -1,4 +1,4 @@
-package objects.members
+package objects.methods
 
 import objects.base.*
 import objects.base.collections.FlArrayObj
@@ -32,7 +32,7 @@ object BuiltinFunObjDisplayObj : KtFunction(ParameterSpec("Obj.displayObj")) {
 object BuiltinFunObjToString : KtFunction(ParameterSpec("Obj.toString")) {
     override fun accept(callContext: KtCallContext): FlObject? {
         val self = callContext.getObjContext() ?: return null
-        return self.callAttribute("meta\$displayObj")
+        return self.callAttribute("meta\$displayObject")
     }
 }
 
@@ -90,7 +90,7 @@ object BuiltinFunObjLet : KtFunction(ParameterSpec("Obj.let", listOf("lambda")))
 
 class SubjectNameTable(name: String, superTable: NameTable?, context: FlObject) : NameTable(name, superTable, context) {
     override fun getOrDefault(name: String, default: FlObject?): FlObject? {
-        context?.getAttributeOrNull(name)?.let { return it }
+        getContextObjOrNull()?.getAttributeOrNull(name)?.let { return it }
         return super.getOrDefault(name, default)
     }
 }

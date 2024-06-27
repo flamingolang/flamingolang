@@ -3,7 +3,7 @@ class ListReplacement(List) {
         self.items = items
     }
 
-    @meta fun displayObj() = "ListReplacement[{self.items.size()}]"
+    @meta fun displayObject() = "ListReplacement[{self.items.size()}]"
     @meta fun isIterable() = true
     @meta fun iter() = ListRepIter(self)
 
@@ -30,3 +30,28 @@ val l = filter(ListReplacement, [1, 2, 3, 4, 5, 6, 6]) { it.isEven() }
 val testClass = classOf("testClass", arrayOf(), dictOf(meta$init=functionOf("init", ("object", ), dictOf(), { self.object = object })))
 
 class TestClass { @meta fun init(object) { self.object = object } }
+
+
+class A {
+    @meta fun init(a) {
+        self.a = a
+    }
+
+    @meta fun displayObject() = "{self.getClass().getName()}({self.a})"
+
+    fun hello() = "one"
+}
+
+
+class B(A) {
+    @meta fun init(a) {
+        super(A, a)
+    }
+
+    fun hello() = super.hello()
+}
+
+println(B(1).a)
+val b = B(1)
+println(b)
+println(b.hello())

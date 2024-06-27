@@ -5,7 +5,7 @@ class Pair {
         self.b = b
     }
     // meta functions
-    @meta fun displayObj() = "Pair({self.a}, {self.b})"
+    @meta fun displayObject() = "Pair({self.a}, {self.b})"
     @meta fun call(pair) = self.add(pair)
     @meta fun add(pair) = Pair(self, pair)
     // normal functions

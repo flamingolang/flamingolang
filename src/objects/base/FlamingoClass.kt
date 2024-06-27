@@ -77,7 +77,9 @@ abstract class FlClass(val name: String, val bases: List<FlClass>) {
 
     fun setClassAttribute(name: String, value: FlObject, constant: Boolean = true) {
         classAttributes[name] = AttributeEntry(value, constant)
-        reflectObj.attributes["class\$$name"] = AttributeEntry(value, constant)
+        val entry = AttributeEntry(value, constant)
+        reflectObj.attributes["class\$$name"] = entry
+        reflectObj.attributes[".class\$$name"] = entry
     }
 
     fun getClassAttribute(name: String): FlObject? {

@@ -7,6 +7,7 @@ import objects.callable.PartialFunction
 import runtime.CompiledOperation
 import runtime.OpCode
 import runtime.Operation
+import java.lang.classfile.Opcode
 import java.util.*
 
 data class Jump(var to: Int = 0)
@@ -123,6 +124,10 @@ open class Compiler(filePath: String? = null) : AbstractCompiler(filePath = file
 
     override fun visitContextObj() {
         addOperation(OpCode.LOAD_CTX)
+    }
+
+    override fun visitContextSuperObj() {
+        addOperation(OpCode.LOAD_CTX_SUP)
     }
 
     override fun visitBuildRange(from: Node, to: Node) {

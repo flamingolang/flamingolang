@@ -45,7 +45,7 @@ open class FlObject(val cls: FlClass, private val readOnly: Boolean = true) {
         return null
     }
 
-    private fun bindSomeCallableAttribute(callable: FlObject): FlObject {
+    fun bindSomeCallableAttribute(callable: FlObject): FlObject {
         if (callable is FlBoundMethodObj) return callable
         else if (callable is FlCallableObj<*> && callable.getAttributeOrNull(
                 "<flag:static>",
@@ -55,26 +55,27 @@ open class FlObject(val cls: FlClass, private val readOnly: Boolean = true) {
         return callable
     }
 
-    open fun getAttributeOrNull(name: String, aroCheck: Boolean = true): FlObject? {
+    open fun getAttributeOrNull(name: String, aroCheck: Boolean = true, bind: Boolean = true): FlObject? {
         if (this is FlReflectObj) attributes[name]?.let { return it.value }
-        else attributes[name]?.let { return bindSomeCallableAttribute(it.value) }
+        else attributes[name]?.let { return if (bind) bindSomeCallableAttribute(it.value) else it.value }
+
 
         if (aroCheck) for (clsObj in cls.aro) {
-            clsObj.getClassAttribute(name)?.let { return bindSomeCallableAttribute(it) }
+            clsObj.getClassAttribute(name)?.let { return if (bind) bindSomeCallableAttribute(it) else it }
         }
         return null
     }
 
-    fun <T : FlObject> getAttributeOfType(name: String, type: KClass<T>, aroCheck: Boolean = true): T? =
-        getAttribute(name, aroCheck = aroCheck)?.let { return it.assertCast("%s".format(name), type) }
+    fun <T : FlObject> getAttributeOfType(name: String, type: KClass<T>, aroCheck: Boolean = true, bind: Boolean = true): T? =
+        getAttribute(name, aroCheck = aroCheck, bind = bind)?.let { return it.assertCast("%s".format(name), type) }
 
 
-    fun getAttributeOrDefault(name: String, default: FlObject, aroCheck: Boolean = true): FlObject {
-        return getAttributeOrNull(name, aroCheck = aroCheck) ?: default
+    fun getAttributeOrDefault(name: String, default: FlObject, aroCheck: Boolean = true, bind: Boolean = true): FlObject {
+        return getAttributeOrNull(name, aroCheck = aroCheck, bind = bind) ?: default
     }
 
-    fun getAttribute(name: String, aroCheck: Boolean = true): FlObject? {
-        getAttributeOrNull(name, aroCheck = aroCheck)?.let { return it }
+    fun getAttribute(name: String, aroCheck: Boolean = true, bind: Boolean = true): FlObject? {
+        getAttributeOrNull(name, aroCheck = aroCheck, bind = bind)?.let { return it }
         throwObj("%s type object has no attribute '%s'".format(cls.name, name), AttributeError)
         return null
     }
@@ -167,10 +168,25 @@ open class FlObject(val cls: FlClass, private val readOnly: Boolean = true) {
     fun truthy() = callAttributeAssertCast("meta\$truthy", FlBooleanObj::class, listOf())?.boolean
 
     fun stringConcat() = callAttributeAssertCast("meta\$toString", FlStringObj::class, listOf())?.string
-    fun stringShow() = callAttributeAssertCast("meta\$displayObj", FlStringObj::class, listOf())?.string
+    fun stringShow() = callAttributeAssertCast("meta\$displayObject", FlStringObj::class, listOf())?.string
 
     open fun displaySafe() = "<%s 0x%x>".format(cls.name, hashCode())
+
+    fun createSuper() = FlSuperObj(this)
 }
+
+
+class FlSuperObj(val self: FlObject) : FlObject(FlSuperClass, true) {
+    override fun getAttributeOrNull(name: String, aroCheck: Boolean, bind: Boolean): FlObject? {
+        if (aroCheck && self.cls.aro.size > 2) for (clsObj in self.cls.aro.subList(1, self.cls.aro.size - 1)) {
+            clsObj.getClassAttribute(name)?.let { return self.bindSomeCallableAttribute(it) }
+        }
+        return super.getAttributeOrNull(name, aroCheck, bind = bind)
+    }
+}
+
+val FlSuperClass = TrustedFlClass("super")
+
 
 class FlReflectObj(val reflectingClass: FlClass, readOnly: Boolean = true) :
     FlObject(FlReflectClass, readOnly = readOnly)

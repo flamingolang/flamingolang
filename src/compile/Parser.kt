@@ -719,6 +719,8 @@ class Parser(lexer: Lexer) : AbstractParser(lexer) {
 
             TokenType.TOKEN_SELF -> ContextObj(atom)
 
+            TokenType.TOKEN_SUPER -> ContextSuperObj(atom)
+
             TokenType.TOKEN_IF -> {
 
                 eat(TokenType.TOKEN_LEFT_PAREN, "if condition must be enclosed with '('")

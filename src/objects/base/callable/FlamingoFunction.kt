@@ -38,7 +38,7 @@ class FlBoundMethodObj(
 ) : FlCallableObj<Frame>(callable.parameters, FlBoundMethodClass, readOnly = readOnly) {
     override fun makeFrame(locals: HashMap<String, FlObject>): Frame {
         val frame = callable.makeFrame(locals)
-        frame.locals.context = self
+        frame.locals.updateContext(self)
         return frame
     }
 

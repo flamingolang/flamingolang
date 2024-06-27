@@ -1,4 +1,4 @@
-package objects.members
+package objects.methods
 
 import objects.base.FlObject
 import objects.base.True
