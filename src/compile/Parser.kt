@@ -26,7 +26,7 @@ abstract class AbstractParser(protected val lexer: Lexer) {
     @Throws(CompilerEscape::class)
     open fun cantParse(message: String, token: Token? = null) {
         val parseToken = token ?: current
-        throw CompilerEscape(FlCompilerErrorObj(message + " (got '%s')".format(parseToken.lexeme), parseToken))
+        throw CompilerEscape(FlCompilerErrorObj(message + " (got '%s')".format(reveal(parseToken.lexeme)), parseToken))
     }
 
     fun peekNext(type: TokenType): Boolean {
@@ -111,11 +111,6 @@ class Parser(lexer: Lexer) : AbstractParser(lexer) {
         return false
     }
 
-    fun eatLexeme(type: TokenType, lexeme: String, message: String) {
-        val token = eat(type, message)
-        if (token.lexeme != lexeme) cantParse(message, token)
-    }
-
     private fun parseFunctionOrGenerator(head: Token, isGenerator: Boolean, name: String): BuildFunction {
         val positionals = mutableListOf<String>()
         val defaults = mutableListOf<String>()
@@ -131,7 +126,9 @@ class Parser(lexer: Lexer) : AbstractParser(lexer) {
                     ) || current.type == TokenType.TOKEN_RIGHT_PAREN
                 ) break
                 if (peekNext(TokenType.TOKEN_IDENTIFIER)) {
-                    eatLexeme(TokenType.TOKEN_IDENTIFIER, "vararg", "vararg keyword expected")
+                    val token = eat(TokenType.TOKEN_IDENTIFIER, "vararg keyword expected")
+                    if (token.lexeme != "vararg") cantParse("vararg keyword expected", token)
+
                     varargs.append(eat(TokenType.TOKEN_IDENTIFIER, "vararg name expected").lexeme)
                     break
                 }
@@ -694,12 +691,12 @@ class Parser(lexer: Lexer) : AbstractParser(lexer) {
             TokenType.TOKEN_STRING -> parseString(atom)
             TokenType.TOKEN_RAW_STRING -> StringLiteral(atom, atom.lexeme.substring(2, atom.lexeme.length - 1))
 
-            TokenType.TOKEN_NUMBER -> {
-                val number = atom.lexeme.toDouble()
+            TokenType.TOKEN_NUMBER, TokenType.TOKEN_ATOMIC_NUM -> {
+                val number = if (atom.type == TokenType.TOKEN_ATOMIC_NUM) atom.lexeme.substring(0, atom.lexeme.length - 1).toDouble() else atom.lexeme.toDouble()
                 if (number > 999999999999999.0) {
                     cantParse("number (%s) is too large".format(number), atom)
                 }
-                NumberLiteral(atom, number)
+                NumberLiteral(atom, number, atom.type == TokenType.TOKEN_ATOMIC_NUM)
             }
 
             TokenType.TOKEN_FALSE -> FalseConstant(atom)

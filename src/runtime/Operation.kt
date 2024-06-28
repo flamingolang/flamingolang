@@ -66,7 +66,7 @@ enum class OpCode {
     BINARY_OPERATION, UNARY_OPERATION, JUMP_IF_NULL, BUILD_STRING, SETUP_TRY, STORE_ATTR, ITER_NEXT, BUILD_FUNCTION, BUILD_CODE,
 
     // take 2+ operands
-    CALL, INDEX_TOP, SETUP_TRY_AS, BUILD_CLASS,
+    CALL, INDEX_TOP, SETUP_TRY_AS, BUILD_CLASS, CREATE_ATOM_NUM,
 
     // debugging
     POP_FRAME, BREAKPOINT, ADD_FRAME, // (frame: Frame)
@@ -442,6 +442,10 @@ open class Operation(val opCode: OpCode, val operands: Array<Any>) {
             LOAD_CTX_SUP -> {
                 val ctxSuper = frame.locals.getContextSuperObj() ?: return
                 addObj(ctxSuper)
+            }
+
+            CREATE_ATOM_NUM -> {
+                addObj(FlAtomicNumObj(operands[0] as Double))
             }
         }
     }

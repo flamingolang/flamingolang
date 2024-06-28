@@ -7,7 +7,6 @@ import objects.callable.PartialFunction
 import runtime.CompiledOperation
 import runtime.OpCode
 import runtime.Operation
-import java.lang.classfile.Opcode
 import java.util.*
 
 data class Jump(var to: Int = 0)
@@ -94,8 +93,11 @@ open class Compiler(filePath: String? = null) : AbstractCompiler(filePath = file
         addOperation(OpCode.BUILD_STRING, parts.size)
     }
 
-    override fun visitNumberLiteral(number: Double) {
-        addOperation(OpCode.LOAD_CONST, numberOf(number))
+    override fun visitNumberLiteral(number: Double, isAtomic: Boolean) {
+        if (isAtomic)
+            addOperation(OpCode.CREATE_ATOM_NUM, number)
+        else
+            addOperation(OpCode.LOAD_CONST, numberOf(number))
     }
 
     override fun visitLookup(name: String) {

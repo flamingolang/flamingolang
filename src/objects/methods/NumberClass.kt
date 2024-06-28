@@ -98,7 +98,7 @@ object BuiltinFunNumberMinus : KtFunction(ParameterSpec("Number.minus")) {
 object BuiltinFunNumberPlus : KtFunction(ParameterSpec("Number.plus")) {
     override fun accept(callContext: KtCallContext): FlObject? {
         val self = callContext.getObjContextOfType(FlNumberObj::class) ?: return null
-        return numberOf(+self.number)
+        return if (self.number < 0) numberOf(-self.number) else numberOf(self.number)
     }
 }
 
@@ -190,3 +190,134 @@ object BuiltinFunNumberCeil : KtFunction(ParameterSpec("Number.ceil")) {
     }
 }
 
+// atomic number
+
+object BuiltinFunNumberToAtom : KtFunction(ParameterSpec("Number.toAtom")) {
+    override fun accept(callContext: KtCallContext): FlObject? {
+        val self = callContext.getObjContextOfType(FlNumberObj::class) ?: return null
+        return FlAtomicNumObj(self.number)
+    }
+}
+
+object BuiltinFunAtomicNumIncr : KtFunction(ParameterSpec("Number.incr")) {
+    override fun accept(callContext: KtCallContext): FlObject? {
+        val self = callContext.getObjContextOfType(FlAtomicNumObj::class) ?: return null
+        self.number++
+        return self
+    }
+}
+
+object BuiltinFunAtomicNumDecr : KtFunction(ParameterSpec("Number.decr")) {
+    override fun accept(callContext: KtCallContext): FlObject? {
+        val self = callContext.getObjContextOfType(FlAtomicNumObj::class) ?: return null
+        self.number--
+        return self
+    }
+}
+
+object BuiltinFunAtomicNumIFloor : KtFunction(ParameterSpec("Number.ifloor")) {
+    override fun accept(callContext: KtCallContext): FlObject? {
+        val self = callContext.getObjContextOfType(FlAtomicNumObj::class) ?: return null
+        self.number = floor(self.number)
+        return self 
+    }
+}
+
+
+object BuiltinFunAtomicNumICeil : KtFunction(ParameterSpec("Number.iceil")) {
+    override fun accept(callContext: KtCallContext): FlObject? {
+        val self = callContext.getObjContextOfType(FlAtomicNumObj::class) ?: return null
+        self.number = ceil(self.number)
+        return self 
+    }
+}
+
+
+object BuiltinFunAtomicNumIAdd : KtFunction(ParameterSpec("AtomicNumber.iadd", listOf("operand"))) {
+    override fun accept(callContext: KtCallContext): FlObject? {
+        val self = callContext.getObjContextOfType(FlAtomicNumObj::class) ?: return null
+        val operand = callContext.getLocalOfType("operand", FlNumberObj::class) ?: return null
+        self.number += operand.number
+        return self 
+    }
+}
+
+
+object BuiltinFunAtomicNumISub : KtFunction(ParameterSpec("AtomicNumber.isub", listOf("operand"))) {
+    override fun accept(callContext: KtCallContext): FlObject? {
+        val self = callContext.getObjContextOfType(FlAtomicNumObj::class) ?: return null
+        val operand = callContext.getLocalOfType("operand", FlNumberObj::class) ?: return null
+        self.number -= operand.number
+        return self 
+    }
+}
+
+
+object BuiltinFunAtomicNumIMul : KtFunction(ParameterSpec("AtomicNumber.imul", listOf("operand"))) {
+    override fun accept(callContext: KtCallContext): FlObject? {
+        val self = callContext.getObjContextOfType(FlAtomicNumObj::class) ?: return null
+        val operand = callContext.getLocalOfType("operand", FlNumberObj::class) ?: return null
+        self.number *= operand.number
+        return self 
+    }
+}
+
+
+object BuiltinFunAtomicNumIDiv : KtFunction(ParameterSpec("AtomicNumber.idiv", listOf("operand"))) {
+    override fun accept(callContext: KtCallContext): FlObject? {
+        val self = callContext.getObjContextOfType(FlAtomicNumObj::class) ?: return null
+        val operand = callContext.getLocalOfType("operand", FlNumberObj::class) ?: return null
+
+        if (operand.number == 0.0) {
+            throwObj("can't divide by zero", ZeroDivisionException)
+            return null
+        }
+
+        self.number /= operand.number
+        return self 
+    }
+}
+
+
+object BuiltinFunAtomicNumIPow : KtFunction(ParameterSpec("AtomicNumber.ipow", listOf("operand"))) {
+    override fun accept(callContext: KtCallContext): FlObject? {
+        val self = callContext.getObjContextOfType(FlAtomicNumObj::class) ?: return null
+        val operand = callContext.getLocalOfType("operand", FlNumberObj::class) ?: return null
+        self.number = self.number.pow(operand.number)
+        return self 
+    }
+}
+
+
+object BuiltinFunAtomicNumIMod : KtFunction(ParameterSpec("AtomicNumber.imod", listOf("operand"))) {
+    override fun accept(callContext: KtCallContext): FlObject? {
+        val self = callContext.getObjContextOfType(FlAtomicNumObj::class) ?: return null
+        val operand = callContext.getLocalOfType("operand", FlNumberObj::class) ?: return null
+
+        if (operand.number == 0.0) {
+            throwObj("can't modulo divide by zero", ZeroDivisionException)
+            return null
+        }
+
+        self.number = self.number.mod(operand.number)
+        return self 
+    }
+}
+
+
+object BuiltinFunAtomicNumIMinus : KtFunction(ParameterSpec("AtomicNumber.iminus")) {
+    override fun accept(callContext: KtCallContext): FlObject? {
+        val self = callContext.getObjContextOfType(FlAtomicNumObj::class) ?: return null
+        self.number = -self.number
+        return self 
+    }
+}
+
+
+object BuiltinFunAtomicNumIPlus : KtFunction(ParameterSpec("AtomicNumber.iplus")) {
+    override fun accept(callContext: KtCallContext): FlObject? {
+        val self = callContext.getObjContextOfType(FlAtomicNumObj::class) ?: return null
+        if (self.number < 0) self.number = -self.number
+        return self
+    }
+}

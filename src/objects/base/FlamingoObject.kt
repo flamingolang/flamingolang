@@ -27,6 +27,7 @@ fun infraTypeName(type: KClass<out FlObject>) = when (type) {
     FlCodeObj::class -> "code"
     FlBooleanObj::class -> "boolean"
     FlNumberObj::class -> "number"
+    FlAtomicNumObj::class -> "atomic number"
     FlFunctionObj::class -> "function"
     FlBuiltinObj::class -> "builtin"
     FlCallableObj::class -> "callable"

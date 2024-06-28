@@ -53,6 +53,7 @@ class B(A) {
     fun world() = super.world() + "!"
 }
 
-val ExporterTest = @import "ExporterTest", EXPT = @import "ExporterTest"
+val test = @import "tests"
 
-println(ExporterTest is EXPT)
+
+test.performAll()

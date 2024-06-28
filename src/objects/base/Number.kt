@@ -2,7 +2,7 @@ package objects.base
 
 import runtime.throwObj
 
-class FlNumberObj(val number: Double, cls: FlClass = FlNumberClass, readOnly: Boolean = true) :
+open class FlNumberObj(open val number: Double, cls: FlClass = FlNumberClass, readOnly: Boolean = true) :
     FlObject(cls, readOnly = readOnly) {
     fun assertGetInteger(what: String): Int? {
         if (number % 1.0 == 0.0) return number.toInt()
@@ -13,8 +13,11 @@ class FlNumberObj(val number: Double, cls: FlClass = FlNumberClass, readOnly: Bo
         return null
     }
 }
-
 val FlNumberClass = TrustedFlClass("Number")
+
+
+class FlAtomicNumObj(override var number: Double, cls: FlClass = FlAtomicNumberClass, readOnly: Boolean = true) : FlNumberObj(number, cls, readOnly)
+val FlAtomicNumberClass = TrustedFlClass("AtomicNumber", listOf(FlNumberClass))
 
 
 fun numberOf(number: Double): FlNumberObj {
