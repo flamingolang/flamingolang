@@ -2,6 +2,7 @@ package objects.libraries
 
 import compile
 import objects.base.*
+import objects.base.collections.FlDictionaryObj
 import objects.callable.*
 import readFile
 import runtime.*
@@ -205,10 +206,97 @@ object BuiltinFunImport : KtFunction(ParameterSpec("import", listOf("path"))) {
 }
 
 
+fun includeModuleFromPath(name: String, path: String, inclusions: Map<String, FlObject>): FlObject? {
+    if (importStack.count { it == path } > 10) {
+        throwObj("detected probable circular import or inclusion (10)", ImportFatality)
+        return null
+    }
+    importStack.push(path)
+
+    val file = File(path)
+    if (!file.exists()) {
+        throwObj("there is no '%s'".format(path), ImportFatality)
+        return null
+    }
+
+    val frame = compile(name, readFile(file), filePath = path) ?: return null
+    frame.locals.setAll(inclusions)
+    execute(frame).thrown?.let { return null }
+
+    importStack.pop()
+
+    return Null
+}
+
+
+object BuiltinFunInclude : KtFunction(ParameterSpec("include", listOf("path", "inclusions"))) {
+    override fun accept(callContext: KtCallContext): FlObject? {
+        val path = callContext.getLocalOfType("path", FlStringObj::class)?.string ?: return null
+        val inclusions = callContext.getLocalOfType("inclusions", FlDictionaryObj::class)?.dictionary ?: return null
+
+        val importBase = peekCall() ?: return null
+
+        if (importBase !is OperationalFrame || importBase.filePath == null) {
+            throwObj("could not automatically resolve path for import, please use a different import function", ImportFatality)
+            return null
+        }
+
+        val pathCurr = Path.of(importBase.filePath).parent
+        if (pathCurr.notExists()) {
+            throwObj("base import path '%s' does not exist".format(importBase.filePath), ImportFatality)
+            return null
+        }
+
+        val finalRelPath = StringBuilder()
+
+        val relSmartPath = RELATIVE_SMART_IMPORT.matchEntire(path)
+        if (relSmartPath != null) {
+            val relBack = relSmartPath.groups[1]!!.value
+            val relPath = relSmartPath.groups[3]!!.value
+            if (relBack.isEmpty()) {
+                finalRelPath.append("./")
+            } else {
+                finalRelPath.append(relBack.replace("..", "../"))
+            }
+            finalRelPath.append(relPath.replace(".", "/"))
+        } else {
+            val relImportPath = RELATIVE_IMPORT.matchEntire(path)?.groups?.get(1)?.value
+            if (relImportPath == null) {
+                throwObj("malformed import path '%s'".format(path), ImportFatality)
+                return null
+            }
+            finalRelPath.append(relImportPath)
+        }
+
+        val name: String
+
+        val pathFinal = pathCurr.toUri().resolve(finalRelPath.toString()).let {
+            name = it.toPath().nameWithoutExtension
+
+            if (it.toPath().isDirectory()) {
+                URI.create("$it/module.fl")
+            } else {
+                URI.create("$it.fl")
+            }
+        }
+
+        if (pathFinal.toPath().notExists()) {
+            throwObj("final import path '%s' does not exist".format(pathFinal.path), ImportFatality)
+            return null
+        }
+
+        val pathFinalString = pathFinal.toPath().absolutePathString()
+
+        return includeModuleFromPath(name, pathFinalString, inclusions)
+    }
+}
+
+
 fun getImportLibrary(): FlModuleObj {
     val importLib = FlModuleObj("importlib", null)
-    
+
     importLib.moduleAttributes["import"] = FlBuiltinObj(BuiltinFunImport)
+    importLib.moduleAttributes["include"] = FlBuiltinObj(BuiltinFunInclude)
     importLib.moduleAttributes["exporter"] = FlBuiltinObj(BuiltinFunImpLibExporter)
 
     return importLib

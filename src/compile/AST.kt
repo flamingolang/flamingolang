@@ -26,7 +26,7 @@ class BuildFunction(
 
 class StringLiteral(token: Token, val string: String) : Node(token)
 class BuildString(token: Token, val parts: Collection<Node>) : Node(token)
-class NumberLiteral(token: Token, val number: Double) : Node(token)
+class NumberLiteral(token: Token, val number: Double, val isAtomic: Boolean) : Node(token)
 class Lookup(token: Token, val name: String) : Node(token)
 class CodeSnippet(token: Token, val snippet: Node) : Node(token)
 class TrueConstant(token: Token) : Node(token)
@@ -327,7 +327,7 @@ abstract class AbstractNodeVisitor {
 
             is StringLiteral -> visitStringLiteral(visitor.string)
             is BuildString -> visitBuildString(visitor.parts)
-            is NumberLiteral -> visitNumberLiteral(visitor.number)
+            is NumberLiteral -> visitNumberLiteral(visitor.number, visitor.isAtomic)
             is Lookup -> visitLookup(visitor.name)
             is CodeSnippet -> visitCodeSnippet(visitor.snippet)
             is TrueConstant -> visitTrueConstant()
@@ -405,7 +405,7 @@ abstract class AbstractNodeVisitor {
 
     abstract fun visitStringLiteral(string: String)
     abstract fun visitBuildString(parts: Collection<Node>)
-    abstract fun visitNumberLiteral(number: Double)
+    abstract fun visitNumberLiteral(number: Double, isAtomic: Boolean)
     abstract fun visitLookup(name: String)
     abstract fun visitCodeSnippet(snippet: Node)
     abstract fun visitTrueConstant()

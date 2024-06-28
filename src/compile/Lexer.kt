@@ -11,7 +11,7 @@ enum class TokenType {
     TOKEN_BANG, TOKEN_BANG_EQUAL, TOKEN_EQUAL, TOKEN_EQUAL_EQUAL, TOKEN_GREATER, TOKEN_GREATER_EQUAL, TOKEN_LESS, TOKEN_LESS_EQUAL, TOKEN_OPEN_PIPE, TOKEN_CLOSE_PIPE, TOKEN_QUESTION_DOT, TOKEN_QUESTION_COLON, TOKEN_DOT_DOT,
 
     // Literals.
-    TOKEN_IDENTIFIER, TOKEN_STRING, TOKEN_NUMBER, TOKEN_RAW_STRING,
+    TOKEN_IDENTIFIER, TOKEN_STRING, TOKEN_NUMBER, TOKEN_ATOMIC_NUM, TOKEN_RAW_STRING,
 
     // Keywords.
     TOKEN_AND, TOKEN_ELSE, TOKEN_FALSE, TOKEN_FOR, TOKEN_FUN, TOKEN_IF, TOKEN_NULL, TOKEN_OR, TOKEN_RETURN, TOKEN_TRUE, TOKEN_VAR, TOKEN_VAL, TOKEN_WHILE, TOKEN_END_LINE, TOKEN_TRY, TOKEN_CATCH, TOKEN_RIGHT_ARROW, TOKEN_CONTINUE, TOKEN_GEN, TOKEN_IS, TOKEN_NOT, TOKEN_BREAK, TOKEN_AS, TOKEN_CLASS, TOKEN_IN, TOKEN_SELF, TOKEN_SUPER,
@@ -96,7 +96,7 @@ class Lexer(val name: String, val source: String, private var pos: Int = 0, priv
                 advance()
             } while (pos < source.length && Character.isDigit(peek()))
         }
-        return makeToken(TokenType.TOKEN_NUMBER)
+        return makeToken(if (match('a')) TokenType.TOKEN_ATOMIC_NUM else TokenType.TOKEN_NUMBER)
     }
 
     private fun scanString(type: TokenType): Token {

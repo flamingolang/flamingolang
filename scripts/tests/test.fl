@@ -1,0 +1,5 @@
+suite.testCalled("Numbers 0-20 are even") {
+    for (i in 0..20) {
+        assert { i.isEven() }
+    }
+}

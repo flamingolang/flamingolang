@@ -17,6 +17,12 @@ class TestResult {
         self.assertions = []
     }
 
+    fun assert(value) {
+        val result = value.callLettingIgnoreThrow()
+        if (result.instanceOf(Throwable)) self.assertions.add(Assertion(null, result))
+        else self.assertions.add(Assertion(result.meta$truthy(), null))
+    }
+
     fun assertEquals(value, otherValue) {
         val compareValue = otherValue.callLettingIgnoreThrow()
         if (compareValue.instanceOf(Throwable)) self.assertions.add(Assertion(null, compareValue))
@@ -43,7 +49,7 @@ class Test {
     fun perform() {
         val testResult = TestResult(self)
         val callResult =
-            self.namespace.callLetting(assertEquals=testResult.assertEquals, assertIs=testResult.assertIs)
+            self.namespace.callLetting(assert=testResult.assert, assertEquals=testResult.assertEquals, assertIs=testResult.assertIs)
         if (callResult.instanceOf(Throwable))
             testResult.error = callResult
         return testResult
@@ -60,37 +66,21 @@ class TestSuite {
     fun testCalled(name, namespace) = self.tests.add(Test(self, name, namespace))
     fun test(namespace) = self.testCalled(namespace.getName(), namespace)
     fun performAll() {
-        println("{GREEN}=== ({self.name}) === /{self.tests.size()}{RESET}")
-        var i = 0
+        println("{GREEN}=== {self.name} ({self.tests.size()}) ==={RESET}")
+        var i = 0a, allFailures = 0a
         for (test in self.tests) {
-            i = i + 1
-            println("{GREEN}  === ({test.name}) === {i}/{self.tests.size()}{RESET}")
-            val result = test.perform()
-            var d = 0, failures = 0
+            println("{GREEN}  === {test.name} ({i}/{self.tests.size()}) ==={RESET}")
+            var result = test.perform(), d = 0a, failures = 0a
             for (assertion in result.assertions) {
-                d = d + 1
-                if (assertion.error) {
-                    println("    {RED}[FAIL {d}/{result.assertions.size()}]: {assertion.error.getClass().getName()}{RESET}")
-                } else if (assertion.pass) {
+                d.incr()
+                if (assertion.error) println("    {RED}[FAIL {d}/{result.assertions.size()}]: {assertion.error.getClass().getName()}{RESET}")
+                else if (assertion.pass) {
                     println("    {GREEN}[PASS {d}/{result.assertions.size()}]{RESET}")
                     continue
-                } else {
-                    println("    {RED}[FAIL {d}/{result.assertions.size()}]{RESET}")
-                }
-                failures = failures + 1
+                } else println("    {RED}[FAIL {d}/{result.assertions.size()}]{RESET}")
+                failures.incr()
             }
+            allFailures.iadd(failures)
         }
     }
 }
-
-
-val test = TestSuite("Generic Tests")
-
-test.testCalled("Number") {
-    assertEquals(1) { 1 }
-    assertEquals(2) { 1 / 0 }
-    assertIs(3) { 3 }
-    assertEquals(3) { 3 }
-}
-
-test.performAll()

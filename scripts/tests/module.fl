@@ -1,2 +1,11 @@
-val printlntest = @import "printlntest"
-val flamingo2test = @import "..flamingo2"
+val importlib = @import "#importlib"
+val testing = @import "..testing"
+
+val suite = testing.TestSuite("All Tests")
+
+importlib.include("test", dictOf(suite=suite))
+importlib.include("test2", dictOf(suite=suite))
+
+
+@importlib.exporter
+fun export(module) = suite

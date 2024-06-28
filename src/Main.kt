@@ -287,6 +287,26 @@ fun initFl() {
 
         it.setClassAttribute("floor", FlBuiltinObj(BuiltinFunNumberFloor))
         it.setClassAttribute("ceil", FlBuiltinObj(BuiltinFunNumberCeil))
+
+        it.setClassAttribute("toAtom", FlBuiltinObj(BuiltinFunNumberToAtom))
+    }
+    // Atomic number
+    FlAtomicNumberClass.let {
+        it.setClassAttribute("iadd", FlBuiltinObj(BuiltinFunAtomicNumIAdd))
+        it.setClassAttribute("isub", FlBuiltinObj(BuiltinFunAtomicNumISub))
+        it.setClassAttribute("imul", FlBuiltinObj(BuiltinFunAtomicNumIMul))
+        it.setClassAttribute("idiv", FlBuiltinObj(BuiltinFunAtomicNumIDiv))
+        it.setClassAttribute("ipow", FlBuiltinObj(BuiltinFunAtomicNumIPow))
+        it.setClassAttribute("imod", FlBuiltinObj(BuiltinFunAtomicNumIMod))
+
+        it.setClassAttribute("iminus", FlBuiltinObj(BuiltinFunAtomicNumIMinus))
+        it.setClassAttribute("iplus", FlBuiltinObj(BuiltinFunAtomicNumIPlus))
+
+        it.setClassAttribute("ifloor", FlBuiltinObj(BuiltinFunAtomicNumIFloor))
+        it.setClassAttribute("iceil", FlBuiltinObj(BuiltinFunAtomicNumICeil))
+
+        it.setClassAttribute("incr", FlBuiltinObj(BuiltinFunAtomicNumIncr))
+        it.setClassAttribute("decr", FlBuiltinObj(BuiltinFunAtomicNumDecr))
     }
     // string
     FlStringClass.let {
