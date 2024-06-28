@@ -17,13 +17,13 @@ fun disOperands(operands: Array<Any>): String {
                 is Frame -> "%s(%s)".format(operand::class.simpleName, operand.name)
                 is Jump -> "to %d".format(operand.to)
                 is String -> "\"%s\"".format(operand)
-                is PartialFunction -> "(%d, %d)".format(
+                is PartialFunction -> "%d positional/s, %d default/s".format(
                     operand.positionals?.size ?: 0,
                     operand.defaults?.size ?: 0,
                 )
 
-                is PartialCodeObj -> "(code '%s')".format(operand.scope.name)
-                is CallSpec -> "(%d, %d)".format(operand.arguments, operand.keywords.size)
+                is PartialCodeObj -> "<code '%s'>".format(operand.scope.name)
+                is CallSpec -> "%d argument/s, %d keyword/s".format(operand.arguments, operand.keywords.size)
                 // binary operation types
                 is BinaryOperationType -> when (operand) {
                     BinaryOperationType.ADD -> "+"

@@ -25,3 +25,4 @@ class FlCodeObj(
 }
 
 object FlCodeObjClass : TrustedFlClass("Code")
+

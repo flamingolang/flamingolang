@@ -1,22 +1,22 @@
 class ListReplacement(List) {
-    @meta fun init(vararg items) {
+    @meta fun val init(vararg items) {
         self.items = items
     }
 
-    @meta fun displayObject() = "ListReplacement[{self.items.size()}]"
-    @meta fun isIterable() = true
-    @meta fun iter() = ListRepIter(self)
+    @meta fun val displayObject() = "ListReplacement[{self.items.size()}]"
+    @meta fun val isIterable() = true
+    @meta fun val iter() = ListRepIter(self)
 
 }
 
 class ListRepIter {
-    @meta fun init(listReplacement) {
+    @meta fun val init(listReplacement) {
         self.listReplacement = listReplacement
         self.pos = 0
     }
 
-    fun hasNextObj() = self.pos < self.listReplacement.items.size()
-    fun nextObj() {
+    fun val hasNextObj() = self.pos < self.listReplacement.items.size()
+    fun val nextObj() {
         item = self.listReplacement.items[self.pos]
         pos = self.pos
         self.pos = self.pos + 1
@@ -33,25 +33,26 @@ class TestClass { @meta fun init(object) { self.object = object } }
 
 
 class A {
-    @meta fun init(a) {
+    @meta fun val init(a) {
         self.a = a
     }
 
     @meta fun displayObject() = "{self.getClass().getName()}({self.a})"
 
-    fun hello() = "one"
+    fun hello() = "hello"
+    fun world() = ", world"
 }
 
 
 class B(A) {
-    @meta fun init(a) {
+    @meta fun val init(a) {
         super(A, a)
     }
 
     fun hello() = super.hello()
+    fun world() = super.world() + "!"
 }
 
-println(B(1).a)
-val b = B(1)
-println(b)
-println(b.hello())
+val ExporterTest = @import "ExporterTest", EXPT = @import "ExporterTest"
+
+println(ExporterTest is EXPT)

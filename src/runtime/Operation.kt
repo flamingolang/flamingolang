@@ -312,7 +312,7 @@ open class Operation(val opCode: OpCode, val operands: Array<Any>) {
             }
 
             SETUP_TRY_AS -> {
-                frame.errorJumpStack.add(Pair((operands[0] as Jump).to, (operands[0] as String)))
+                frame.errorJumpStack.add(Pair((operands[0] as Jump).to, (operands[1] as String)))
             }
 
             FINISH_TRY -> {

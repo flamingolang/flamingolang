@@ -5,9 +5,11 @@ import objects.base.callable.FlFunctionObj
 import objects.base.collections.FlArrayObj
 import objects.base.collections.FlDictionaryObj
 import objects.base.collections.FlListObj
+import objects.base.collections.FlRangeObj
 import objects.callable.FlBuiltinObj
 import objects.callable.FlCallableObj
 import objects.callable.FlCodeObj
+import objects.libraries.FlModuleObj
 import runtime.throwObj
 import java.util.*
 import kotlin.reflect.KClass
@@ -28,6 +30,8 @@ fun infraTypeName(type: KClass<out FlObject>) = when (type) {
     FlFunctionObj::class -> "function"
     FlBuiltinObj::class -> "builtin"
     FlCallableObj::class -> "callable"
+    FlModuleObj::class -> "module"
+    FlRangeObj::class -> "range"
     else -> "object"
 }
 

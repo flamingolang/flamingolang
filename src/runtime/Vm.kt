@@ -104,6 +104,7 @@ fun call(): FlObject? {
     }
 }
 
+/*
 fun builtinFunctionFrameGlance(frame: BuiltinFunctionFrame): String {
     val glance = StringBuilder("%s(".format(frame.ktFunction.parameters.name))
     val arguments = ArrayList<String>()
@@ -113,6 +114,7 @@ fun builtinFunctionFrameGlance(frame: BuiltinFunctionFrame): String {
     glance.append(arguments.joinToString(", ")).append(')')
     return glance.toString()
 }
+ */
 
 fun printError(error: FlThrowableObj, stackSnapshot: Collection<Frame>) {
     if (stackSnapshot.isNotEmpty()) {
@@ -134,7 +136,8 @@ fun printError(error: FlThrowableObj, stackSnapshot: Collection<Frame>) {
                     printRedLine("        " + operation.token.underlineString())
                     continue
                 }
-            } else if (frame is BuiltinFunctionFrame) {
+            }
+            /* else if (frame is BuiltinFunctionFrame) {
                 val contextObj = frame.locals.getContextObjOrNull()
                 val context = if (contextObj != null) " of %s".format(contextObj.cls.name) else ""
                 printRedLine("    in internal %s%s".format(builtinFunctionFrameGlance(frame), context))
@@ -143,6 +146,7 @@ fun printError(error: FlThrowableObj, stackSnapshot: Collection<Frame>) {
             }
 
             printRedLine("    at %s".format(frame.name))
+             */
         }
     }
     printRedLine("==( %s : %s )==".format(error.cls.name, error.message))

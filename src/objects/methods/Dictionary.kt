@@ -7,7 +7,7 @@ import objects.callable.KtCallContext
 import objects.callable.KtFunction
 import objects.callable.ParameterSpec
 
-object BuiltinFunDictionaryDisplayObj : KtFunction(ParameterSpec("Dictionary.displayObj")) {
+object BuiltinFunDictDisplayObj : KtFunction(ParameterSpec("Dictionary.displayObj")) {
     override fun accept(callContext: KtCallContext): FlObject? {
         val self = callContext.getObjContextOfType(FlDictionaryObj::class) ?: return null
         val stringShows = mutableListOf<String>()

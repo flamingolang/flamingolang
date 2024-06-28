@@ -52,3 +52,6 @@
   * Number helper methods
     * `floorDiv(operand)`
 
+* ## Helper methods
+  * `booleanOf(obj)`
+  * `stringOf(obj)`

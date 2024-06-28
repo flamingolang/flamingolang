@@ -13,7 +13,7 @@ import runtime.OperationalFrame
 import runtime.execute
 import runtime.throwObj
 
-class ErrorWrapperKtFunctionAny(val name: String) :
+class ErrWrapperExst(val name: String) :
     KtFunction(ParameterSpec(name, varargs = "args", varkwargs = "kwargs")) {
     override fun accept(callContext: KtCallContext): FlObject? {
         val self = callContext.getObjContext() ?: return null
@@ -149,5 +149,12 @@ object BuiltinFunObjExplicitCall : KtFunction(ParameterSpec("Obj.explicitCall", 
         val keywords =
             callContext.getLocalOfType("keywords", FlDictionaryObj::class)?.dictionary ?: return null
         return self.call(arguments, keywords)
+    }
+}
+
+class ErrWrapperNew(private val cls: FlClass, private val replacement: String? = null) : KtFunction(ParameterSpec("new")) {
+    override fun accept(callContext: KtCallContext): FlObject? {
+        throwObj("%s type objects can't be created through constructor%s".format(cls.name, replacement ?. let { ", use '$it' instead" } ?: ""), TypeError)
+        return null
     }
 }

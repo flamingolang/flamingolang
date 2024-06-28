@@ -158,7 +158,7 @@ class Parser(lexer: Lexer) : AbstractParser(lexer) {
         )
     }
 
-    fun unpackDecorators(decorators: MutableList<Node>, function: BuildFunction): NameAssignment {
+    private fun unpackDecorators(decorators: MutableList<Node>, function: BuildFunction, isConstant: Boolean): NameAssignment {
         val firstDecorator = decorators.removeLast()
         var decorated = CallObj(firstDecorator.token, firstDecorator, mutableListOf(function), listOf(), listOf())
 
@@ -167,7 +167,7 @@ class Parser(lexer: Lexer) : AbstractParser(lexer) {
             decorated = CallObj(nextDecorator.token, nextDecorator, mutableListOf(decorated), listOf(), listOf())
         }
 
-        return NameAssignment(firstDecorator.token, function.name, decorated, false)
+        return NameAssignment(firstDecorator.token, function.name, decorated, isConstant)
     }
 
     private fun statement(): Node {
@@ -223,13 +223,18 @@ class Parser(lexer: Lexer) : AbstractParser(lexer) {
                     val operator = current
                     if (match(TokenType.TOKEN_AT)) {
                         decorators.add(expression())
-                    } else if (match(TokenType.TOKEN_GEN)) {
-                        eat(TokenType.TOKEN_FUN, "'gen' keyword is a modifier for functions and so must proceed 'fun'")
+                    } else if (match(TokenType.TOKEN_GEN) || match(TokenType.TOKEN_FUN)) {
+                        var isGenerator = false
+                        if (operator.type == TokenType.TOKEN_GEN) {
+                            eat(
+                                TokenType.TOKEN_FUN,
+                                "'gen' keyword is a modifier for functions and so must proceed 'fun'"
+                            )
+                            isGenerator = true
+                        }
+                        val isConstant = match(TokenType.TOKEN_VAL)
                         val name = eat(TokenType.TOKEN_IDENTIFIER, "functions must have a name").lexeme
-                        return unpackDecorators(decorators, parseFunctionOrGenerator(operator, true, name))
-                    } else if (match(TokenType.TOKEN_FUN)) {
-                        val name = eat(TokenType.TOKEN_IDENTIFIER, "functions must have a name").lexeme
-                        return unpackDecorators(decorators, parseFunctionOrGenerator(operator, false, name))
+                        return unpackDecorators(decorators, parseFunctionOrGenerator(operator, isGenerator, name), isConstant)
                     } else break
                 }
 

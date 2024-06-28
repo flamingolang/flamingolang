@@ -168,7 +168,7 @@ class Lexer(val name: String, val source: String, private var pos: Int = 0, priv
 
             else -> {
                 if (isIdentifier(ch)) scanIdentifier() else if (Character.isDigit(ch)) scanNumber() else {
-                    cantCompile("unexpected character")
+                    cantCompile("unexpected character '%c'".format(ch))
                 }
             }
         }
@@ -189,8 +189,17 @@ class Lexer(val name: String, val source: String, private var pos: Int = 0, priv
             if (match(' ') || match('\t')) continue
             if (peek() == '/' && peekNext() == '/') {
                 while (peek() != '\n') advance()
+                continue
             } else if (peek() == '/' && peekNext() == '*') {
-                while (!(peek() == '*' && peekNext() == '/')) advance()
+                while (!isAtEnd) {
+                    if (peek() == '*' && peekNext() == '/') {
+                        advance()
+                        advance()
+                        break
+                    }
+                    advance()
+                }
+                continue
             }
             break
         }

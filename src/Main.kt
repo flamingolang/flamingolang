@@ -81,7 +81,7 @@ fun getStandardBuiltins(): HashMap<String, FlObject> {
 
     // classes
     
-    builtins["Obj"] = FlObjClass.reflectObj
+    builtins["Object"] = FlObjClass.reflectObj
     builtins["Class"] = FlReflectClass.reflectObj
     builtins["Boolean"] = FlBooleanClass.reflectObj
     builtins["Callable"] = FlCallableClass.reflectObj
@@ -168,7 +168,7 @@ fun initFl() {
             "call",
             "minus",
             "plus"
-        ).forEach { mn -> it.setClassAttribute("meta\$$mn", FlBuiltinObj(ErrorWrapperKtFunctionAny(mn))) }
+        ).forEach { mn -> it.setClassAttribute("meta\$$mn", FlBuiltinObj(ErrWrapperExst(mn))) }
 
         it.setClassAttribute("getClass", FlBuiltinObj(BuiltinFunObjGetClass))
         it.setClassAttribute("instanceOf", FlBuiltinObj(BuiltinFunObjInstanceOf))
@@ -182,6 +182,8 @@ fun initFl() {
     }
     // super objects
     FlSuperClass.let {
+        it.setClassAttribute("meta\$new", FlBuiltinObj(ErrWrapperNew(it)))
+
         it.setClassAttribute("meta\$displayObject", FlBuiltinObj(BuiltinFunSuperDisplayObj))
         it.setClassAttribute("meta\$call", FlBuiltinObj(BuiltinFunSuperCall))
     }
@@ -193,18 +195,33 @@ fun initFl() {
         it.setClassAttribute("meta\$displayObject", FlBuiltinObj(BuiltinFunClsDisplayObj))
 
         it.setClassAttribute("getName", FlBuiltinObj(BuiltinFunClsGetName))
+        it.setClassAttribute("getBases", FlBuiltinObj(BuiltinFunClsGetBases))
+        it.setClassAttribute("getClassAttributes", FlBuiltinObj(BuiltinFunClsGetClsAttrs))
     }
     // callable
-    FlCallableClass.setClassAttribute("meta\$call", FlBuiltinObj(BuiltinFunCallableCall))
-    FlCallableClass.setClassAttribute("meta\$displayObject", FlBuiltinObj(BuiltinFunCallableDisplayObj))
+    FlCallableClass.let {
+        it.setClassAttribute("meta\$new", FlBuiltinObj(ErrWrapperNew(it)))
+
+        it.setClassAttribute("meta\$call", FlBuiltinObj(BuiltinFunCallableCall))
+        it.setClassAttribute("meta\$displayObject", FlBuiltinObj(BuiltinFunCallableDisplayObj))
+    }
     // code object
-    FlCodeObjClass.setClassAttribute("meta\$displayObject", FlBuiltinObj(BuiltinFunCodeObjDisplayObj))
-    FlCodeObjClass.setClassAttribute("callLetting", FlBuiltinObj(BuiltinFunCodeObjCallLetting))
+    FlCodeObjClass.let {
+        it.setClassAttribute("meta\$new", FlBuiltinObj(ErrWrapperNew(it)))
+
+        it.setClassAttribute("meta\$displayObject", FlBuiltinObj(BuiltinFunCodeObjDisplayObj))
+
+        it.setClassAttribute("callLetting", FlBuiltinObj(BuiltinFunCodeObjCallLetting))
+        it.setClassAttribute("callLettingIgnoreThrow", FlBuiltinObj(BuiltinFunCodeObjCallLettingIgnore))
+        it.setClassAttribute("getName", FlBuiltinObj(BuiltinFunCodeObjGetName))
+    }
     // generic iterator
     FlGenericIteratorClass.setClassAttribute("hasNextObj", FlBuiltinObj(BuiltinFunGenIterHasNextObj))
     FlGenericIteratorClass.setClassAttribute("nextObj", FlBuiltinObj(BuiltinFunGenIterNextObj))
     // list
     FlListClass.let {
+        it.setClassAttribute("meta\$new", FlBuiltinObj(ErrWrapperNew(it, "listOf")))
+
         it.setClassAttribute("meta\$displayObject", FlBuiltinObj(BuiltinFunListDisplayObj))
         it.setClassAttribute("meta\$iter", FlBuiltinObj(BuiltinFunListIter))
         it.setClassAttribute("meta\$isIterable", FlBuiltinObj(BuiltinFunListIsIter))
@@ -225,9 +242,13 @@ fun initFl() {
         it.setClassAttribute("where", FlBuiltinObj(BuiltinFunListWhere))
     }
     // array
-    FlArrayClass.setClassAttribute("meta\$displayObject", FlBuiltinObj(BuiltinFunArrayDisplayObj))
-    FlArrayClass.setClassAttribute("meta\$iter", FlBuiltinObj(BuiltinFunArrayIter))
-    FlArrayClass.setClassAttribute("meta\$isIterable", FlBuiltinObj(BuiltinFunArrayIsIter))
+    FlArrayClass.let {
+        it.setClassAttribute("meta\$new", FlBuiltinObj(ErrWrapperNew(it, "arrayOf")))
+
+        it.setClassAttribute("meta\$displayObject", FlBuiltinObj(BuiltinFunArrayDisplayObj))
+        it.setClassAttribute("meta\$iter", FlBuiltinObj(BuiltinFunArrayIter))
+        it.setClassAttribute("meta\$isIterable", FlBuiltinObj(BuiltinFunArrayIsIter))
+    }
     // range
     FlRangeClass.setClassAttribute("meta\$displayObject", FlBuiltinObj(BuiltinFunRangeDisplayObj))
     FlRangeClass.setClassAttribute("meta\$iter", FlBuiltinObj(BuiltinFunRangeIter))
@@ -235,12 +256,14 @@ fun initFl() {
     FlRangeIterClass.setClassAttribute("hasNextObj", FlBuiltinObj(BuiltinFunRangeIterHasNextObj))
     FlRangeIterClass.setClassAttribute("nextObj", FlBuiltinObj(BuiltinFunRangeIterNextObj))
     // dictionary
-    FlDictionaryClass.setClassAttribute(
-        "meta\$displayObject",
-        FlBuiltinObj(BuiltinFunDictionaryDisplayObj)
-    )
+    FlDictionaryClass.let {
+        it.setClassAttribute("meta\$new", FlBuiltinObj(ErrWrapperNew(it, "dictOf")))
+        it.setClassAttribute("meta\$displayObject", FlBuiltinObj(BuiltinFunDictDisplayObj))
+    }
     // number
     FlNumberClass.let {
+        it.setClassAttribute("meta\$new", FlBuiltinObj(ErrWrapperNew(it)))
+
         it.setClassAttribute("meta\$displayObject", FlBuiltinObj(BuiltinFunNumberDisplayObj))
         it.setClassAttribute("meta\$add", FlBuiltinObj(BuiltinFunNumberAdd))
         it.setClassAttribute("meta\$sub", FlBuiltinObj(BuiltinFunNumberSub))
@@ -267,6 +290,8 @@ fun initFl() {
     }
     // string
     FlStringClass.let {
+        it.setClassAttribute("meta\$new", FlBuiltinObj(ErrWrapperNew(it, "stringOf")))
+
         it.setClassAttribute("meta\$displayObject", FlBuiltinObj(BuiltinFunStringDisplayObj))
         it.setClassAttribute("meta\$toString", FlBuiltinObj(BuiltinFunStringToString))
         it.setClassAttribute("meta\$add", FlBuiltinObj(BuiltinFunStringAdd))
@@ -278,16 +303,21 @@ fun initFl() {
     }
     // boolean
     FlBooleanClass.let {
+        it.setClassAttribute("meta\$new", FlBuiltinObj(ErrWrapperNew(it, "booleanOf")))
+
         it.setClassAttribute("meta\$displayObject", FlBuiltinObj(BuiltinFunBoolDisplayObj))
         it.setClassAttribute("meta\$truthy", FlBuiltinObj(BuiltinFunBoolTruthy))
     }
     // null
     FlNullClass.let {
+        it.setClassAttribute("meta\$new", FlBuiltinObj(ErrWrapperNew(it, )))
+
         it.setClassAttribute("meta\$displayObject", FlBuiltinObj(BuiltinFunNullDisplayObj))
         it.setClassAttribute("meta\$truthy", FlBuiltinObj(BuiltinFunNullTruthy))
     }
     // module
     FlModuleClass.let {
+        it.setClassAttribute("meta\$new", FlBuiltinObj(ErrWrapperNew(it, "moduleOf")))
         it.setClassAttribute("meta\$displayObject", FlBuiltinObj(BuiltinFunModDisplayObj))
 
         it.setClassAttribute("export", FlBuiltinObj(BuiltinFunModExport))
@@ -297,8 +327,21 @@ fun initFl() {
     builtins = getStandardBuiltins()
 }
 
+fun getBuiltinLibrary(): FlModuleObj {
+    val builtinsLib = FlModuleObj("builtins", null)
+    builtins.entries.forEach { (key, value) -> builtinsLib.moduleAttributes[key] = value }
+    return builtinsLib
+}
+
+fun initModules() {
+    builtinModules["builtins"] = getBuiltinLibrary()
+    builtinModules["importlib"] = getImportLibrary()
+    builtinModules["stringlib"] = getStringLibrary()
+}
+
 fun main(args: Array<String>) {
     initFl()
+    initModules()
 
     val operations = ArrayList<Operation>()
     val frame: OperationalFrame
@@ -313,7 +356,7 @@ fun main(args: Array<String>) {
         frame = OperationalFrame("module", operations, filePath = file.absolutePath)
 
         compile(
-            file.name, readFile(file), outFrame = frame, outFrameOperations = operations, filePath = file.absolutePath
+            file.nameWithoutExtension, readFile(file), outFrame = frame, outFrameOperations = operations, filePath = file.absolutePath
         )
         if (vmThrown != null) {
             printError(vmThrown!!, vmCallStack)

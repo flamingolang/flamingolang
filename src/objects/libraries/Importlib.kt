@@ -2,10 +2,7 @@ package objects.libraries
 
 import compile
 import objects.base.*
-import objects.callable.FlCodeObj
-import objects.callable.KtCallContext
-import objects.callable.KtFunction
-import objects.callable.ParameterSpec
+import objects.callable.*
 import readFile
 import runtime.*
 import java.io.File
@@ -23,7 +20,7 @@ fun peekCall(): Frame? {
     return null
 }
 
-open class FlModuleObj(val name: String, val filePath: String, cls: FlClass = FlModuleClass, readOnly: Boolean = true) : FlObject(cls, readOnly = readOnly) {
+open class FlModuleObj(val name: String, val filePath: String?, cls: FlClass = FlModuleClass, readOnly: Boolean = true) : FlObject(cls, readOnly = readOnly) {
     val moduleAttributes = HashMap<String, FlObject>()
 
     override fun getAttributeOrNull(name: String, aroCheck: Boolean, bind: Boolean): FlObject? {
@@ -31,7 +28,17 @@ open class FlModuleObj(val name: String, val filePath: String, cls: FlClass = Fl
         return super.getAttributeOrNull(name, aroCheck, bind = bind)
     }
 }
+
 val FlModuleClass = TrustedFlClass("module")
+val ExporterSentinel = FlObject(FlNullClass)
+
+object BuiltinFunImpLibExporter : KtFunction(ParameterSpec("Module.displayObj", listOf("callable"))) {
+    override fun accept(callContext: KtCallContext): FlObject? {
+        val callable = callContext.getLocalOfType("callable", FlCallableObj::class) ?: return null
+        callable.attributes["<flag:importlib:exporter>"] = AttributeEntry(ExporterSentinel, true)
+        return callable
+    }
+}
 
 
 object BuiltinFunModDisplayObj : KtFunction(ParameterSpec("Module.displayObj")) {
@@ -44,7 +51,8 @@ object BuiltinFunModDisplayObj : KtFunction(ParameterSpec("Module.displayObj")) 
 object BuiltinFunModGetPath : KtFunction(ParameterSpec("Module.getPath")) {
     override fun accept(callContext: KtCallContext): FlObject? {
         val self = callContext.getObjContextOfType(FlModuleObj::class) ?: return null
-        return stringOf(self.filePath)
+        self.filePath ?. let { return stringOf(it) }
+        return Null 
     }
 }
 
@@ -75,8 +83,8 @@ object BuiltinFunModExport : KtFunction(ParameterSpec("Module.export", listOf("n
 
 
 
-val fileModules = HashMap<String, FlModuleObj>()
-val builtinModules = HashMap<String, FlModuleObj>()
+val fileModules = HashMap<String, FlObject>()
+val builtinModules = HashMap<String, FlObject>()
 
 val importStack = Stack<String>()
 
@@ -85,7 +93,7 @@ val RELATIVE_SMART_IMPORT = "(^(\\.\\.)*)([a-zA-Z0-9_\\-\$]+(\\.[a-zA-Z0-9_\\-\$
 val RELATIVE_IMPORT = "^(\\.\\./)*([a-zA-Z0-9_\\-\$] ?)+(/[a-zA-Z0-9_\\-\$] ?)*\$".toRegex()
 
 
-fun importModuleFromPath(name: String, path: String): FlModuleObj? {
+fun importModuleFromPath(name: String, path: String): FlObject? {
     if (importStack.count { it == path } > 10) {
         throwObj("detected probable circular import (10)", ImportFatality)
         return null
@@ -103,12 +111,22 @@ fun importModuleFromPath(name: String, path: String): FlModuleObj? {
 
     val module = FlModuleObj(name, path)
 
+    var exporterCandidate: FlObject? = null
+
     for (entry in frame.locals.entries) {
+        entry.value.value.attributes["<flag:importlib:exporter>"]?.value?.let {
+            if (exporterCandidate != null) {
+                throwObj("multiple exporter functions detected", ImportFatality)
+                return null
+            }
+            exporterCandidate = entry.value.value
+        }
         module.moduleAttributes[entry.key] = entry.value.value
     }
 
     importStack.pop()
-    return module
+
+    return exporterCandidate?.call(listOf(module)) ?: module
 }
 
 
@@ -184,4 +202,14 @@ object BuiltinFunImport : KtFunction(ParameterSpec("import", listOf("path"))) {
 
         return module
     }
+}
+
+
+fun getImportLibrary(): FlModuleObj {
+    val importLib = FlModuleObj("importlib", null)
+    
+    importLib.moduleAttributes["import"] = FlBuiltinObj(BuiltinFunImport)
+    importLib.moduleAttributes["exporter"] = FlBuiltinObj(BuiltinFunImpLibExporter)
+
+    return importLib
 }

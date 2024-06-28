@@ -7,8 +7,6 @@ import objects.base.collections.FlListObj
 import objects.callable.KtCallContext
 import objects.callable.KtFunction
 import objects.callable.ParameterSpec
-import runtime.NameTable
-import runtime.NameTableEntry
 
 object BuiltinFunClsDisplayObj : KtFunction(ParameterSpec("Class.displayObj")) {
     override fun accept(callContext: KtCallContext): FlObject? {
@@ -54,7 +52,26 @@ object BuiltinFunClsGetName : KtFunction(ParameterSpec("Class.getName")) {
 }
 
 
+object BuiltinFunClsGetBases : KtFunction(ParameterSpec("Class.getBases")) {
+    override fun accept(callContext: KtCallContext): FlObject? {
+        val self = callContext.getObjContextOfType(FlReflectObj::class) ?: return null
+        return FlArrayObj(self.reflectingClass.bases.map { it.reflectObj }.toTypedArray())
+    }
+}
 
+
+object BuiltinFunClsGetClsAttrs : KtFunction(ParameterSpec("Class.getClassAttributes")) {
+    override fun accept(callContext: KtCallContext): FlObject? {
+        val self = callContext.getObjContextOfType(FlReflectObj::class) ?: return null
+        val attributes = LinkedHashMap<String, FlObject>()
+        self.reflectingClass.classAttributes.forEach { (key, value) ->
+            attributes[key] = FlDictionaryObj(sortedMapOf(Pair("value", value.value), Pair("constant", booleanOf(value.constant))))
+        }
+        return FlDictionaryObj(attributes)
+    }
+}
+
+/*
 object BuiltinFunClsNewClass : KtFunction(ParameterSpec("Class.new", listOf("name", "bases", "attributes"))) {
     override fun accept(callContext: KtCallContext): FlObject? {
         callContext.getObjContextOfType(FlReflectObj::class)
@@ -82,6 +99,7 @@ object BuiltinFunClsNewClass : KtFunction(ParameterSpec("Class.new", listOf("nam
         return createUserDefinedFlClass(name, bases, attributes)?.reflectObj
     }
 }
+ */
 
 
 object BuiltinFunObjInit : KtFunction(ParameterSpec("Class.init", varargs = "?", varkwargs = "?")) {
