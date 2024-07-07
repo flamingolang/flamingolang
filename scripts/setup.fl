@@ -69,3 +69,33 @@ val module = {
     }
     println(where(a, { it % 2 != 0 }, { it * 2 }))
 }
+
+class Object {
+    /*@doc
+
+    @returns a representation of the object that is more useful for debugging i.e. more representative of the
+    object as opposed ot what the object represents
+
+    @return-type #String
+
+    @doc*/
+    fun meta$displayObject() = null
+
+    /*@doc
+
+    @returns a representation of the object that is meant to seamlessly concatenate with a string object, e.g used
+    in println
+
+    @return-type #String
+
+    @doc*/
+    fun meta$displayObject() = null
+
+    /*@doc
+
+    @description Should check if the operand and self are compatible for addition and then return the result if
+    possible, otherwise should throw some kind of error e.g. #TypeError
+
+    @doc*/
+    fun meta$add(operand) = null
+}

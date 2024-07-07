@@ -1,11 +1,4 @@
-val importlib = @import "#importlib"
-val testing = @import "..testing"
-
-val suite = testing.TestSuite("All Tests")
-
-importlib.include("test", dictOf(suite=suite))
-importlib.include("test2", dictOf(suite=suite))
-
-
-@importlib.exporter
-fun export(module) = suite
+import("#flamingo").export {
+    val main = isMain 
+    val path = getPath
+}

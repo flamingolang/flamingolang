@@ -17,12 +17,16 @@ enum class TokenType {
     TOKEN_AND, TOKEN_ELSE, TOKEN_FALSE, TOKEN_FOR, TOKEN_FUN, TOKEN_IF, TOKEN_NULL, TOKEN_OR, TOKEN_RETURN, TOKEN_TRUE, TOKEN_VAR, TOKEN_VAL, TOKEN_WHILE, TOKEN_END_LINE, TOKEN_TRY, TOKEN_CATCH, TOKEN_RIGHT_ARROW, TOKEN_CONTINUE, TOKEN_GEN, TOKEN_IS, TOKEN_NOT, TOKEN_BREAK, TOKEN_AS, TOKEN_CLASS, TOKEN_IN, TOKEN_SELF, TOKEN_SUPER,
 
     // other
-    TOKEN_EOF, TOKEN_ERROR
+    TOKEN_SOF, TOKEN_EOF, TOKEN_ERROR, TOKEN_COMMENT
 }
 
+abstract class AbstractLexer {
+    abstract val name: String
+    abstract val source: String
+}
 
 data class Token(
-    val lexer: Lexer,
+    val lexer: AbstractLexer,
     val lineStart: Int,
     val lineEnd: Int,
     val columnStart: Int,
@@ -39,7 +43,7 @@ data class Token(
 }
 
 
-class Lexer(val name: String, val source: String, private var pos: Int = 0, private var lineStart: Int = 0) {
+class Lexer(override val name: String, override val source: String, private var pos: Int = 0, private var lineStart: Int = 0) : AbstractLexer() {
     private var lexemeStartPos = 0
 
     private var columnStart = 0
@@ -141,7 +145,21 @@ class Lexer(val name: String, val source: String, private var pos: Int = 0, priv
             '@' -> makeToken(TokenType.TOKEN_AT)
             '%' -> makeToken(TokenType.TOKEN_PERCENT)
             ':' -> makeToken(TokenType.TOKEN_COLON)
-            '/' -> makeToken(TokenType.TOKEN_SLASH)
+            '/' -> {
+                if (peek() == '*') {
+                    while (!isAtEnd) {
+                        if (peek() == '*' && peekNext() == '/') {
+                            advance()
+                            advance()
+                            break
+                        }
+                        advance()
+                    }
+                    makeToken(TokenType.TOKEN_COMMENT)
+                } else {
+                    makeToken(TokenType.TOKEN_SLASH)
+                }
+            }
             '*' -> makeToken(TokenType.TOKEN_STAR)
             '^' -> makeToken(TokenType.TOKEN_CARET)
             '?' -> if (match('.')) makeToken(TokenType.TOKEN_QUESTION_DOT)
@@ -189,16 +207,6 @@ class Lexer(val name: String, val source: String, private var pos: Int = 0, priv
             if (match(' ') || match('\t')) continue
             if (peek() == '/' && peekNext() == '/') {
                 while (peek() != '\n') advance()
-                continue
-            } else if (peek() == '/' && peekNext() == '*') {
-                while (!isAtEnd) {
-                    if (peek() == '*' && peekNext() == '/') {
-                        advance()
-                        advance()
-                        break
-                    }
-                    advance()
-                }
                 continue
             }
             break

@@ -7,12 +7,14 @@ abstract class AbstractParser(protected val lexer: Lexer) {
     protected var current: Token
     private var last: Token
     private var scoped = 0
+    protected var commentBuffer: Token? = null
+    protected var commentLife = 0
 
     init {
-        current = lexer.nextToken()
+        current = Token(lexer, 0, 0, 0, 0, "", TokenType.TOKEN_SOF)
         last = current
         next = lexer.nextToken()
-        if (current.type == TokenType.TOKEN_END_LINE) advance()
+        advance()
     }
 
     fun match(type: TokenType): Boolean {
@@ -40,11 +42,28 @@ abstract class AbstractParser(protected val lexer: Lexer) {
     }
 
     fun advance() {
-        do {
+        while (true) {
             last = current
             current = next
             next = lexer.nextToken()
-        } while (current.type == TokenType.TOKEN_END_LINE)
+
+            if (current.type == TokenType.TOKEN_COMMENT) {
+                commentBuffer = current
+                commentLife = 0
+                continue
+            } else if (current.type == TokenType.TOKEN_END_LINE) {
+                continue
+            }
+
+            if (commentLife == 0)      {
+              commentLife = 1
+            } else if (commentLife > 1) {
+                commentBuffer = null
+                commentLife = -1
+            }
+
+            break
+        }
     }
 
     private fun atEndOfStatement() = current.type == TokenType.TOKEN_SEMICOLON || current.type == TokenType.TOKEN_EOF
@@ -111,7 +130,7 @@ class Parser(lexer: Lexer) : AbstractParser(lexer) {
         return false
     }
 
-    private fun parseFunctionOrGenerator(head: Token, isGenerator: Boolean, name: String): BuildFunction {
+    private fun parseFunctionOrGenerator(head: Token, isGenerator: Boolean, name: String, comment: Token?): BuildFunction {
         val positionals = mutableListOf<String>()
         val defaults = mutableListOf<String>()
         val defaultValues = mutableListOf<Node>()
@@ -151,7 +170,8 @@ class Parser(lexer: Lexer) : AbstractParser(lexer) {
             defaultValues,
             if (varargs.isNotEmpty()) varargs.toString() else null,
             if (varkwargs.isNotEmpty()) varkwargs.toString() else null,
-            body
+            body,
+            comment
         )
     }
 
@@ -213,6 +233,7 @@ class Parser(lexer: Lexer) : AbstractParser(lexer) {
             }
 
             TokenType.TOKEN_AT -> {
+                val comment = commentBuffer
                 advance()
 
                 val decorators = mutableListOf(expression())
@@ -231,7 +252,7 @@ class Parser(lexer: Lexer) : AbstractParser(lexer) {
                         }
                         val isConstant = match(TokenType.TOKEN_VAL)
                         val name = eat(TokenType.TOKEN_IDENTIFIER, "functions must have a name").lexeme
-                        return unpackDecorators(decorators, parseFunctionOrGenerator(operator, isGenerator, name), isConstant)
+                        return unpackDecorators(decorators, parseFunctionOrGenerator(operator, isGenerator, name, comment), isConstant)
                     } else break
                 }
 
@@ -260,6 +281,7 @@ class Parser(lexer: Lexer) : AbstractParser(lexer) {
             }
 
             TokenType.TOKEN_GEN, TokenType.TOKEN_FUN -> {
+                val comment = commentBuffer
                 advance()
                 val isGenerator = if (first.type == TokenType.TOKEN_GEN) {
                     eat(TokenType.TOKEN_FUN, "'gen' keyword is a modifier for functions and so must proceed 'fun'")
@@ -272,10 +294,11 @@ class Parser(lexer: Lexer) : AbstractParser(lexer) {
 
                 val name = eat(TokenType.TOKEN_IDENTIFIER, "functions must have a name").lexeme
 
-                NameAssignment(first, name, parseFunctionOrGenerator(first, isGenerator, name), isConstant)
+                NameAssignment(first, name, parseFunctionOrGenerator(first, isGenerator, name, comment), isConstant)
             }
 
             TokenType.TOKEN_CLASS -> {
+                val comment = commentBuffer
                 advance()
 
                 val name = eat(TokenType.TOKEN_IDENTIFIER, "classes must have a name").lexeme
@@ -292,7 +315,7 @@ class Parser(lexer: Lexer) : AbstractParser(lexer) {
                 }
                 val body = statement()
 
-                NameAssignment(first, name, BuildClass(first, name, packages, body), isConstant)
+                NameAssignment(first, name, BuildClass(first, name, packages, body, comment), isConstant)
             }
 
             TokenType.TOKEN_VAR, TokenType.TOKEN_VAL -> {
@@ -712,7 +735,7 @@ class Parser(lexer: Lexer) : AbstractParser(lexer) {
                     advance()
                 }
 
-                parseFunctionOrGenerator(atom, isGenerator, name)
+                parseFunctionOrGenerator(atom, isGenerator, name, null)
             }
 
             TokenType.TOKEN_NULL -> NullConstant(atom)

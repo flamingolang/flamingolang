@@ -366,7 +366,9 @@ open class Operation(val opCode: OpCode, val operands: Array<Any>) {
                     partialFunction.varargs,
                     partialFunction.varkwargs
                 )
-                addObj(FlFunctionObj(codeObj, parameterSpec))
+                val function = FlFunctionObj(codeObj, parameterSpec)
+                if (codeObj.comment != null) function.attributes["meta\$doc"] = AttributeEntry(stringOf(codeObj.comment), true)
+                addObj(function)
             }
 
             BUILD_RANGE -> {
@@ -404,7 +406,8 @@ open class Operation(val opCode: OpCode, val operands: Array<Any>) {
                 }
 
                 val cls = createUserDefinedFlClass(name, supers, classFrame.locals) ?: return
-
+                if (codeObj.comment != null)
+                    cls.reflectObj.attributes["meta\$doc"] = AttributeEntry(stringOf(codeObj.comment), true)
                 addObj(cls.reflectObj)
             }
 
@@ -415,7 +418,7 @@ open class Operation(val opCode: OpCode, val operands: Array<Any>) {
 
             BUILD_CODE -> {
                 val code = operands[0] as PartialCodeObj
-                addObj(FlCodeObj(code.scope.name, code.scope.operations, code.filePath, frame.locals))
+                addObj(FlCodeObj(code.scope.name, code.scope.operations, code.filePath, frame.locals, comment = code.comment))
             }
 
             UNARY_OPERATION -> {

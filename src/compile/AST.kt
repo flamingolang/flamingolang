@@ -11,7 +11,7 @@ class NodeCollection(token: Token, val nodes: Collection<Node>) : Node(token)
 
 // Node types
 
-class BuildClass(token: Token, val name: String, val packages: List<Node>, val body: Node) : Node(token)
+class BuildClass(token: Token, val name: String, val packages: List<Node>, val body: Node, val comment: Token?) : Node(token)
 class BuildFunction(
     token: Token,
     val isGenerator: Boolean,
@@ -21,7 +21,8 @@ class BuildFunction(
     val defaultValues: List<Node>,
     val varargs: String?,
     val varkwargs: String?,
-    val body: Node
+    val body: Node,
+    val comment: Token?
 ) : Node(token)
 
 class StringLiteral(token: Token, val string: String) : Node(token)
@@ -313,7 +314,7 @@ abstract class AbstractNodeVisitor {
             is NodeCollection -> visitNodeCollection(visitor.nodes)
             is HangsValue -> visitHangsValue(visitor.node)
 
-            is BuildClass -> visitBuildClass(visitor.name, visitor.packages, visitor.body)
+            is BuildClass -> visitBuildClass(visitor.name, visitor.packages, visitor.body, visitor.comment)
             is BuildFunction -> visitBuildFunction(
                 visitor.name,
                 visitor.isGenerator,
@@ -322,7 +323,8 @@ abstract class AbstractNodeVisitor {
                 visitor.defaultValues,
                 visitor.varargs,
                 visitor.varkwargs,
-                visitor.body
+                visitor.body,
+                visitor.comment
             )
 
             is StringLiteral -> visitStringLiteral(visitor.string)
@@ -391,7 +393,7 @@ abstract class AbstractNodeVisitor {
 
     abstract fun visitHangsValue(node: Node)
 
-    abstract fun visitBuildClass(name: String, packages: List<Node>, body: Node)
+    abstract fun visitBuildClass(name: String, packages: List<Node>, body: Node, comment: Token?)
     abstract fun visitBuildFunction(
         name: String,
         isGenerator: Boolean,
@@ -400,7 +402,8 @@ abstract class AbstractNodeVisitor {
         defaultValues: List<Node>,
         varargs: String?,
         varkwargs: String?,
-        body: Node
+        body: Node,
+        comment: Token?
     )
 
     abstract fun visitStringLiteral(string: String)

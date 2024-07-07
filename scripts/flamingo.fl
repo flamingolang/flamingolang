@@ -1,12 +1,12 @@
-class ListReplacement(List) {
-    @meta fun val init(vararg items) {
-        self.items = items
-    }
+/*
 
-    @meta fun val displayObject() = "ListReplacement[{self.items.size()}]"
+*/
+
+class ListReplacement(List) {
+    @meta fun val init() { self.items = self }
+    @meta fun val displayObject() = "ListReplacement[{self.size()}]"
     @meta fun val isIterable() = true
     @meta fun val iter() = ListRepIter(self)
-
 }
 
 class ListRepIter {
@@ -20,17 +20,15 @@ class ListRepIter {
         item = self.listReplacement.items[self.pos]
         pos = self.pos
         self.pos = self.pos + 1
-        return (self.pos)
+        return (pos)
     }
 }
-
 
 val l = filter(ListReplacement, [1, 2, 3, 4, 5, 6, 6]) { it.isEven() }
 
 val testClass = classOf("testClass", arrayOf(), dictOf(meta$init=functionOf("init", ("object", ), dictOf(), { self.object = object })))
 
 class TestClass { @meta fun init(object) { self.object = object } }
-
 
 class A {
     @meta fun val init(a) {
@@ -44,7 +42,7 @@ class A {
 }
 
 
-class B(A) {
+class B (A) {
     @meta fun val init(a) {
         super(A, a)
     }
@@ -53,7 +51,20 @@ class B(A) {
     fun world() = super.world() + "!"
 }
 
-val test = @import "tests"
+
+import("#flamingo").export {
+    val main = isMain
+    val path = getPath
+}
+
+println(main(), path())
+
+val doc = import("#flamingodoc")
 
 
-test.performAll()
+/*
+   @description
+*/
+@meta fun test() {
+    println("hello world")
+}

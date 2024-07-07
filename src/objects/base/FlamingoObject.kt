@@ -186,6 +186,7 @@ class FlSuperObj(val self: FlObject) : FlObject(FlSuperClass, true) {
         if (aroCheck && self.cls.aro.size > 2) for (clsObj in self.cls.aro.subList(1, self.cls.aro.size - 1)) {
             clsObj.getClassAttribute(name)?.let { return self.bindSomeCallableAttribute(it) }
         }
+
         return super.getAttributeOrNull(name, aroCheck, bind = bind)
     }
 }

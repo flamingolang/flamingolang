@@ -1,5 +1,0 @@
-suite.testCalled("Numbers 0-20 are odd") {
-    for (i in 0..20) {
-        assert { i.isOdd() }
-    }
-}

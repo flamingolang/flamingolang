@@ -10,7 +10,7 @@ import objects.callable.KtFunction
 import objects.callable.ParameterSpec
 
 
-object BuiltinFunCallableDisplayObj : KtFunction(ParameterSpec("Callable.displayObj")) {
+object BuiltinFunCallableDisplayObj : KtFunction(ParameterSpec("Callable.displayObject")) {
     override fun accept(callContext: KtCallContext): FlObject? {
         val self = callContext.getObjContextOfType(FlCallableObj::class) ?: return null
         return stringOf("<%s '%s'>".format(self.cls.name, self.parameters.name))

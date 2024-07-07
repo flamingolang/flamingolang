@@ -1,6 +1,6 @@
 package runtime
 
-import builtins
+import setup.builtins
 import objects.base.AssignmentError
 import objects.base.FlObject
 import objects.base.FlSuperObj

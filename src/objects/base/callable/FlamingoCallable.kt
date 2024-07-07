@@ -23,7 +23,8 @@ data class CallSpec(val arguments: Int, val keywords: List<String>)
 data class PartialCodeObj(
     val name: String,
     val scope: Scope,
-    val filePath: String? = null
+    val filePath: String? = null,
+    val comment: String? = null
 )
 
 data class ParameterSpec(

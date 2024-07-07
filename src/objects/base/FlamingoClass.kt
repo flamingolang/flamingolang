@@ -86,6 +86,13 @@ abstract class FlClass(val name: String, val bases: List<FlClass>) {
         classAttributes[name]?.let { return it.value }
         return null
     }
+
+    fun getClassAttributeRe(name: String): FlObject? {
+        for (cls in aro) {
+            cls.classAttributes[name]?.let { return it.value }
+        }
+        return null
+    }
 }
 
 
@@ -93,7 +100,7 @@ class ResolvedFlClass(
     name: String,
     bases: List<FlClass>,
     override val aro: List<FlClass>,
-    reflectReadable: Boolean = false
+    reflectReadable: Boolean = false,
 ) :
     FlClass(name, bases) {
     override val reflectObj = FlReflectObj(this, readOnly = reflectReadable)
@@ -108,7 +115,7 @@ open class TrustedFlClass(name: String, bases: List<FlClass> = listOf(FlObjClass
 fun createUserDefinedFlClass(
     name: String,
     bases: List<FlClass>,
-    attributes: NameTable? = null
+    attributes: NameTable? = null,
 ): ResolvedFlClass? {
     val classBases = bases.ifEmpty { listOf(FlObjClass) }
     val aroOfClass = aro(classBases)

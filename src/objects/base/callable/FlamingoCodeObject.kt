@@ -13,15 +13,18 @@ class FlCodeObj(
     val operations: Collection<Operation>,
     var filePath: String? = null,
     var nativeClosure: NameTable? = null,
+    val comment: String? = null,
     cls: FlClass = FlCodeObjClass,
-    readOnly: Boolean = true
+    readOnly: Boolean = true,
 ) : FlObject(cls, readOnly) {
     fun callLetting(initLocals: Map<String, FlObject>? = null): FlObject? {
         val execution = execute(getFrame(initLocals))
         execution.result?.let { return it }
         return null
     }
-    fun getFrame(initLocals: Map<String, FlObject>? = null) = OperationalFrame(name, operations, closure = nativeClosure, initLocals = initLocals, filePath = filePath)
+
+    fun getFrame(initLocals: Map<String, FlObject>? = null) =
+        OperationalFrame(name, operations, closure = nativeClosure, initLocals = initLocals, filePath = filePath)
 }
 
 object FlCodeObjClass : TrustedFlClass("Code")

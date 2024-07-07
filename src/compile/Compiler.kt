@@ -57,11 +57,14 @@ open class Compiler(filePath: String? = null) : AbstractCompiler(filePath = file
         addOperation(OpCode.POP_TOP)
     }
 
-    override fun visitBuildClass(name: String, packages: List<Node>, body: Node) {
+    override fun visitBuildClass(name: String, packages: List<Node>, body: Node, comment: Token?) {
         visitAll(packages)
         addScope(name)
         visit(body)
-        addOperation(OpCode.BUILD_CODE, PartialCodeObj(name, scopeStack.pop(), filePath = filePath))
+
+        val classComment = comment?.lexeme?.substring(2, comment.lexeme.length - 2)
+
+        addOperation(OpCode.BUILD_CODE, PartialCodeObj(name, scopeStack.pop(), filePath = filePath, comment = classComment))
         addOperation(OpCode.BUILD_CLASS, name, packages.size)
     }
 
@@ -73,12 +76,16 @@ open class Compiler(filePath: String? = null) : AbstractCompiler(filePath = file
         defaultValues: List<Node>,
         varargs: String?,
         varkwargs: String?,
-        body: Node
+        body: Node,
+        comment: Token?
     ) {
         visitAll(defaultValues)
         addScope(name, isFunction = true)
         visit(body)
-        addOperation(OpCode.BUILD_CODE, PartialCodeObj(name, scopeStack.pop(), filePath = filePath))
+
+        val functionComment = comment?.lexeme?.substring(2, comment.lexeme.length - 2)
+
+        addOperation(OpCode.BUILD_CODE, PartialCodeObj(name, scopeStack.pop(), filePath = filePath, comment = functionComment))
         addOperation(
             OpCode.BUILD_FUNCTION, PartialFunction(isGenerator, positionals, defaults, varargs, varkwargs)
         )

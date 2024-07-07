@@ -67,6 +67,14 @@ object BuiltinFunArrayOf : KtFunction(ParameterSpec("arrayOf", varargs = "items"
 }
 
 
+object BuiltinFunListNew : KtFunction(ParameterSpec("new", varargs = "varargs", varkwargs = "varkwargs")) {
+    override fun accept(callContext: KtCallContext): FlObject? {
+        val self = callContext.getObjContextOfType(FlReflectObj::class) ?: return null
+        return FlListObj(mutableListOf(), self.reflectingClass, readOnly = false)
+    }
+}
+
+
 object BuiltinFunListOf : KtFunction(ParameterSpec("listOf", varargs = "items")) {
     override fun accept(callContext: KtCallContext): FlObject? {
         return callContext.getLocalOfType("items", FlListObj::class)

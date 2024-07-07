@@ -22,14 +22,17 @@ object BuiltinFunClsCall : KtFunction(ParameterSpec("Class.call", varargs = "arg
         val args = callContext.getLocalOfType("args", FlListObj::class) ?: return null
         val kwargs = callContext.getLocalOfType("kwargs", FlDictionaryObj::class) ?: return null
 
-        val metaNew = self.reflectingClass.getClassAttribute("meta\$new")
+        val metaNew = self.reflectingClass.getClassAttributeRe("meta\$new")
         val instanceObj = if (metaNew != null) {
-            metaNew.call() ?: return null
+            self.reflectingClass.reflectObj.bindSomeCallableAttribute(metaNew).call(args.list, kwargs.dictionary) ?: return null
         } else {
             FlObject(self.reflectingClass, readOnly = false)
         }
 
-        instanceObj.callAttribute("meta\$init", args.list, kwargs.dictionary) ?: return null
+        val metaInit = self.reflectingClass.getClassAttributeRe("meta\$init")
+        if (metaInit != null) {
+            instanceObj.bindSomeCallableAttribute(metaInit).call(args.list, kwargs.dictionary) ?: return null
+        }
 
         return instanceObj
     }
