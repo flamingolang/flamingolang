@@ -28,13 +28,14 @@ object BuiltinFunCodeObjCallLetting : KtFunction(ParameterSpec("Code.callLetting
 }
 
 
-object BuiltinFunCodeObjCallLettingIgnore : KtFunction(ParameterSpec("Code.callLettingIgnoreThrow", varkwargs = "locals")) {
+object BuiltinFunCodeObjCallLettingIgnore :
+    KtFunction(ParameterSpec("Code.callLettingIgnoreThrow", varkwargs = "locals")) {
     override fun accept(callContext: KtCallContext): FlObject? {
         val self = callContext.getObjContextOfType(FlCodeObj::class) ?: return null
         val locals = callContext.getLocalOfType("locals", FlDictionaryObj::class) ?: return null
         val execution = execute(self.getFrame(locals.dictionary), propagateError = false)
         execution.result?.let { return it }
-        execution.thrown?.let { return it  }
+        execution.thrown?.let { return it }
         return Null
     }
 }

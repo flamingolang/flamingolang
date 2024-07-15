@@ -14,10 +14,10 @@ enum class TokenType {
     TOKEN_IDENTIFIER, TOKEN_STRING, TOKEN_NUMBER, TOKEN_ATOMIC_NUM, TOKEN_RAW_STRING,
 
     // Keywords.
-    TOKEN_AND, TOKEN_ELSE, TOKEN_FALSE, TOKEN_FOR, TOKEN_FUN, TOKEN_IF, TOKEN_NULL, TOKEN_OR, TOKEN_RETURN, TOKEN_TRUE, TOKEN_VAR, TOKEN_VAL, TOKEN_WHILE, TOKEN_END_LINE, TOKEN_TRY, TOKEN_CATCH, TOKEN_RIGHT_ARROW, TOKEN_CONTINUE, TOKEN_GEN, TOKEN_IS, TOKEN_NOT, TOKEN_BREAK, TOKEN_AS, TOKEN_CLASS, TOKEN_IN, TOKEN_SELF, TOKEN_SUPER,
+    TOKEN_AND, TOKEN_ELSE, TOKEN_FALSE, TOKEN_FOR, TOKEN_FUN, TOKEN_IF, TOKEN_NULL, TOKEN_OR, TOKEN_RETURN, TOKEN_TRUE, TOKEN_VAR, TOKEN_VAL, TOKEN_WHILE, TOKEN_END_LINE, TOKEN_TRY, TOKEN_CATCH, TOKEN_RIGHT_ARROW, TOKEN_CONTINUE, TOKEN_GEN, TOKEN_IS, TOKEN_NOT, TOKEN_BREAK, TOKEN_AS, TOKEN_CLASS, TOKEN_IN, TOKEN_SELF, TOKEN_SUPER, TOKEN_IMPORT,
 
     // other
-    TOKEN_SOF, TOKEN_EOF, TOKEN_ERROR, TOKEN_COMMENT
+    TOKEN_SOF, TOKEN_EOF, TOKEN_ERROR, TOKEN_COMMENT,
 }
 
 abstract class AbstractLexer {
@@ -43,7 +43,12 @@ data class Token(
 }
 
 
-class Lexer(override val name: String, override val source: String, private var pos: Int = 0, private var lineStart: Int = 0) : AbstractLexer() {
+class Lexer(
+    override val name: String,
+    override val source: String,
+    private var pos: Int = 0,
+    private var lineStart: Int = 0
+) : AbstractLexer() {
     private var lexemeStartPos = 0
 
     private var columnStart = 0
@@ -87,6 +92,7 @@ class Lexer(override val name: String, override val source: String, private var 
             "in" -> makeToken(TokenType.TOKEN_IN)
             "self" -> makeToken(TokenType.TOKEN_SELF)
             "super" -> makeToken(TokenType.TOKEN_SUPER)
+            "import" -> makeToken(TokenType.TOKEN_IMPORT)
             else -> makeToken(TokenType.TOKEN_IDENTIFIER)
         }
     }
@@ -160,6 +166,7 @@ class Lexer(override val name: String, override val source: String, private var 
                     makeToken(TokenType.TOKEN_SLASH)
                 }
             }
+
             '*' -> makeToken(TokenType.TOKEN_STAR)
             '^' -> makeToken(TokenType.TOKEN_CARET)
             '?' -> if (match('.')) makeToken(TokenType.TOKEN_QUESTION_DOT)

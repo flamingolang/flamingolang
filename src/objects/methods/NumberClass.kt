@@ -219,7 +219,7 @@ object BuiltinFunAtomicNumIFloor : KtFunction(ParameterSpec("Number.ifloor")) {
     override fun accept(callContext: KtCallContext): FlObject? {
         val self = callContext.getObjContextOfType(FlAtomicNumObj::class) ?: return null
         self.number = floor(self.number)
-        return self 
+        return self
     }
 }
 
@@ -228,7 +228,7 @@ object BuiltinFunAtomicNumICeil : KtFunction(ParameterSpec("Number.iceil")) {
     override fun accept(callContext: KtCallContext): FlObject? {
         val self = callContext.getObjContextOfType(FlAtomicNumObj::class) ?: return null
         self.number = ceil(self.number)
-        return self 
+        return self
     }
 }
 
@@ -237,8 +237,9 @@ object BuiltinFunAtomicNumIAdd : KtFunction(ParameterSpec("AtomicNumber.iadd", l
     override fun accept(callContext: KtCallContext): FlObject? {
         val self = callContext.getObjContextOfType(FlAtomicNumObj::class) ?: return null
         val operand = callContext.getLocalOfType("operand", FlNumberObj::class) ?: return null
-        self.number += operand.number
-        return self 
+        val result = self.callAttributeAssertCast("meta\$add", FlNumberObj::class, listOf(operand)) ?: return null
+        self.number = result.number
+        return self
     }
 }
 
@@ -247,8 +248,9 @@ object BuiltinFunAtomicNumISub : KtFunction(ParameterSpec("AtomicNumber.isub", l
     override fun accept(callContext: KtCallContext): FlObject? {
         val self = callContext.getObjContextOfType(FlAtomicNumObj::class) ?: return null
         val operand = callContext.getLocalOfType("operand", FlNumberObj::class) ?: return null
-        self.number -= operand.number
-        return self 
+        val result = self.callAttributeAssertCast("meta\$sub", FlNumberObj::class, listOf(operand)) ?: return null
+        self.number = result.number
+        return self
     }
 }
 
@@ -257,8 +259,9 @@ object BuiltinFunAtomicNumIMul : KtFunction(ParameterSpec("AtomicNumber.imul", l
     override fun accept(callContext: KtCallContext): FlObject? {
         val self = callContext.getObjContextOfType(FlAtomicNumObj::class) ?: return null
         val operand = callContext.getLocalOfType("operand", FlNumberObj::class) ?: return null
-        self.number *= operand.number
-        return self 
+        val result = self.callAttributeAssertCast("meta\$mul", FlNumberObj::class, listOf(operand)) ?: return null
+        self.number = result.number
+        return self
     }
 }
 
@@ -268,13 +271,10 @@ object BuiltinFunAtomicNumIDiv : KtFunction(ParameterSpec("AtomicNumber.idiv", l
         val self = callContext.getObjContextOfType(FlAtomicNumObj::class) ?: return null
         val operand = callContext.getLocalOfType("operand", FlNumberObj::class) ?: return null
 
-        if (operand.number == 0.0) {
-            throwObj("can't divide by zero", ZeroDivisionException)
-            return null
-        }
+        val result = self.callAttributeAssertCast("meta\$div", FlNumberObj::class, listOf(operand)) ?: return null
+        self.number = result.number
 
-        self.number /= operand.number
-        return self 
+        return self
     }
 }
 
@@ -283,8 +283,9 @@ object BuiltinFunAtomicNumIPow : KtFunction(ParameterSpec("AtomicNumber.ipow", l
     override fun accept(callContext: KtCallContext): FlObject? {
         val self = callContext.getObjContextOfType(FlAtomicNumObj::class) ?: return null
         val operand = callContext.getLocalOfType("operand", FlNumberObj::class) ?: return null
-        self.number = self.number.pow(operand.number)
-        return self 
+        val result = self.callAttributeAssertCast("meta\$pow", FlNumberObj::class, listOf(operand)) ?: return null
+        self.number = result.number
+        return self
     }
 }
 
@@ -293,14 +294,9 @@ object BuiltinFunAtomicNumIMod : KtFunction(ParameterSpec("AtomicNumber.imod", l
     override fun accept(callContext: KtCallContext): FlObject? {
         val self = callContext.getObjContextOfType(FlAtomicNumObj::class) ?: return null
         val operand = callContext.getLocalOfType("operand", FlNumberObj::class) ?: return null
-
-        if (operand.number == 0.0) {
-            throwObj("can't modulo divide by zero", ZeroDivisionException)
-            return null
-        }
-
-        self.number = self.number.mod(operand.number)
-        return self 
+        val result = self.callAttributeAssertCast("meta\$mod", FlNumberObj::class, listOf(operand)) ?: return null
+        self.number = result.number
+        return self
     }
 }
 
@@ -308,8 +304,9 @@ object BuiltinFunAtomicNumIMod : KtFunction(ParameterSpec("AtomicNumber.imod", l
 object BuiltinFunAtomicNumIMinus : KtFunction(ParameterSpec("AtomicNumber.iminus")) {
     override fun accept(callContext: KtCallContext): FlObject? {
         val self = callContext.getObjContextOfType(FlAtomicNumObj::class) ?: return null
-        self.number = -self.number
-        return self 
+        val result = self.callAttributeAssertCast("meta\$minus", FlNumberObj::class) ?: return null
+        self.number = result.number
+        return self
     }
 }
 
@@ -317,7 +314,8 @@ object BuiltinFunAtomicNumIMinus : KtFunction(ParameterSpec("AtomicNumber.iminus
 object BuiltinFunAtomicNumIPlus : KtFunction(ParameterSpec("AtomicNumber.iplus")) {
     override fun accept(callContext: KtCallContext): FlObject? {
         val self = callContext.getObjContextOfType(FlAtomicNumObj::class) ?: return null
-        if (self.number < 0) self.number = -self.number
+        val result = self.callAttributeAssertCast("meta\$plus", FlNumberObj::class) ?: return null
+        self.number = result.number
         return self
     }
 }

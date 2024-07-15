@@ -57,7 +57,10 @@ object BuiltinFunListIndex : KtFunction(ParameterSpec("List.index", listOf("inde
         var index = callContext.getLocalOfType("index", FlNumberObj::class)?.assertGetInteger("index") ?: return null
         while (index < 0) index += self.list.size
         if (index > self.list.size) {
-            throwObj("index %d is out of range for %s of size %d".format(index, self.cls.name, self.list.size), IndexError)
+            throwObj(
+                "index %d is out of range for %s of size %d".format(index, self.cls.name, self.list.size),
+                IndexError
+            )
             return null
         }
         return self.list[index]

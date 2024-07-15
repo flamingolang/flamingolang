@@ -115,7 +115,7 @@ open class TrustedFlClass(name: String, bases: List<FlClass> = listOf(FlObjClass
 fun createUserDefinedFlClass(
     name: String,
     bases: List<FlClass>,
-    attributes: NameTable? = null,
+    attributes: ClassNameTable? = null,
 ): ResolvedFlClass? {
     val classBases = bases.ifEmpty { listOf(FlObjClass) }
     val aroOfClass = aro(classBases)
@@ -130,12 +130,30 @@ fun createUserDefinedFlClass(
     val finalClass = ResolvedFlClass(name, classBases, finalClassOrder)
     finalClassOrder.addFirst(finalClass)
 
-    if (attributes != null) for (entry in attributes.entries) {
-        finalClass.setClassAttribute(
-            entry.key,
-            entry.value.value,
-            entry.value.constant
-        )
+    if (attributes != null) {
+        for (entry in attributes.entries) {
+            finalClass.setClassAttribute(
+                entry.key,
+                entry.value.value,
+                entry.value.constant
+            )
+        }
+
+        for (entry in attributes.metaMethods) {
+            finalClass.setClassAttribute("meta\$${entry.key}", entry.value.value, entry.value.constant)
+        }
+
+        for (entry in attributes.staticMethods) {
+            finalClass.setClassAttribute("meta\$static\$${entry.key}", entry.value.value, entry.value.constant)
+        }
+
+        for (entry in attributes.getters) {
+            finalClass.setClassAttribute("meta\$getter\$${entry.key}", entry.value.value, entry.value.constant)
+        }
+
+        for (entry in attributes.setters) {
+            finalClass.setClassAttribute("meta\$setter\$${entry.key}", entry.value.value, entry.value.constant)
+        }
     }
 
     return finalClass

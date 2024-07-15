@@ -1,8 +1,11 @@
 package objects.methods
 
-import objects.base.*
+import objects.base.FlObject
+import objects.base.FlReflectObj
+import objects.base.FlSuperObj
 import objects.base.collections.FlDictionaryObj
 import objects.base.collections.FlListObj
+import objects.base.stringOf
 import objects.callable.FlCallableObj
 import objects.callable.KtCallContext
 import objects.callable.KtFunction
@@ -16,7 +19,8 @@ object BuiltinFunSuperDisplayObj : KtFunction(ParameterSpec("Super.displayObj"))
 }
 
 
-object BuiltinFunSuperCall : KtFunction(ParameterSpec("Super.call", listOf("class"), varargs = "args", varkwargs = "kwargs")) {
+object BuiltinFunSuperCall :
+    KtFunction(ParameterSpec("Super.call", listOf("class"), varargs = "args", varkwargs = "kwargs")) {
     override fun accept(callContext: KtCallContext): FlObject? {
         val self = callContext.getObjContextOfType(FlSuperObj::class) ?: return null
         val args = callContext.getLocalOfType("args", FlListObj::class) ?: return null

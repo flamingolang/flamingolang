@@ -11,7 +11,9 @@ class NodeCollection(token: Token, val nodes: Collection<Node>) : Node(token)
 
 // Node types
 
-class BuildClass(token: Token, val name: String, val packages: List<Node>, val body: Node, val comment: Token?) : Node(token)
+class BuildClass(token: Token, val name: String, val packages: List<Node>, val body: Node, val comment: Token?) :
+    Node(token)
+
 class BuildFunction(
     token: Token,
     val isGenerator: Boolean,

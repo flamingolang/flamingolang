@@ -129,7 +129,7 @@ class FlBuiltinObj(
     val callable: KtFunction, cls: FlClass = FlBuiltinClass, readOnly: Boolean = true
 ) : FlCallableObj<BuiltinFunctionFrame>(callable.parameters, cls, readOnly = readOnly) {
     override fun makeFrame(locals: HashMap<String, FlObject>): BuiltinFunctionFrame {
-        val frame = BuiltinFunctionFrame(callable.parameters.name, callable)
+        val frame = BuiltinFunctionFrame(callable.parameters.name)
         frame.locals.setAll(locals)
         return frame
     }

@@ -24,7 +24,8 @@ object BuiltinFunClsCall : KtFunction(ParameterSpec("Class.call", varargs = "arg
 
         val metaNew = self.reflectingClass.getClassAttributeRe("meta\$new")
         val instanceObj = if (metaNew != null) {
-            self.reflectingClass.reflectObj.bindSomeCallableAttribute(metaNew).call(args.list, kwargs.dictionary) ?: return null
+            self.reflectingClass.reflectObj.bindSomeCallableAttribute(metaNew).call(args.list, kwargs.dictionary)
+                ?: return null
         } else {
             FlObject(self.reflectingClass, readOnly = false)
         }
@@ -68,7 +69,8 @@ object BuiltinFunClsGetClsAttrs : KtFunction(ParameterSpec("Class.getClassAttrib
         val self = callContext.getObjContextOfType(FlReflectObj::class) ?: return null
         val attributes = LinkedHashMap<String, FlObject>()
         self.reflectingClass.classAttributes.forEach { (key, value) ->
-            attributes[key] = FlDictionaryObj(sortedMapOf(Pair("value", value.value), Pair("constant", booleanOf(value.constant))))
+            attributes[key] =
+                FlDictionaryObj(sortedMapOf(Pair("value", value.value), Pair("constant", booleanOf(value.constant))))
         }
         return FlDictionaryObj(attributes)
     }

@@ -1,23 +1,24 @@
 package runtime
 
+import objects.base.*
 import setup.builtins
-import objects.base.AssignmentError
-import objects.base.FlObject
-import objects.base.FlSuperObj
-import objects.base.NameError
 
 /**
  * data class to represent table entries for the name table abstract class
  */
 data class NameTableEntry(var value: FlObject, val constant: Boolean = false)
 
-
-open class NameTable(val name: String, private val superTable: NameTable? = null, private var context: FlObject? = null) {
+// Need to convert name table into abstract class or interface
+open class NameTable(
+    val name: String,
+    private val superTable: NameTable? = null,
+    private var context: FlObject? = null
+) {
     val entries = HashMap<String, NameTableEntry>()
     private var contextSuper: FlSuperObj? = null
 
     init {
-        context ?. let { contextSuper = it.createSuper() }
+        context?.let { contextSuper = it.createSuper() }
     }
 
     /**
@@ -25,14 +26,10 @@ open class NameTable(val name: String, private val superTable: NameTable? = null
      *
      * @return if the value was found, the value. Otherwise null
      */
-    open fun getOrDefault(name: String, default: FlObject?): FlObject? {
-        // println("    ".repeat(id) + "checking %s (0x%x) for %s".format(this.name, this.hashCode(), name))
-        // for (entry in entries) {
-        //    println("    ".repeat(id + 1) + entry.key + " (0x%x) : ".format(entry.value.value.hashCode()) + entry.value.value.stringShow())
-        // }
+    open fun getOrDefault(name: String, default: FlObject?, checkBuiltins: Boolean = true): FlObject? {
         entries[name]?.let { return it.value }
-        superTable?.let { table -> table.getOrDefault(name, null)?.let { return it } }
-        builtins.let { return it.getOrDefault(name, default) }
+        superTable?.let { table -> table.getOrDefault(name, null, checkBuiltins)?.let { return it } }
+        return if (checkBuiltins) builtins.getOrDefault(name, default) else default
     }
 
     /**
@@ -111,4 +108,43 @@ open class NameTable(val name: String, private val superTable: NameTable? = null
 }
 
 class ClassNameTable(name: String, superTable: NameTable? = null, context: FlObject? = null) :
-    NameTable(name, superTable, context)
+    NameTable(name, superTable, context) {
+    val setters = hashMapOf<String, NameTableEntry>()
+    val getters = hashMapOf<String, NameTableEntry>()
+
+    val metaMethods = hashMapOf<String, NameTableEntry>()
+    val staticMethods = hashMapOf<String, NameTableEntry>()
+
+    override fun set(name: String, value: FlObject, constant: Boolean): Unit? {
+        when (True) {
+            value.getAttributeOrNull("<flag:prop:getter>") -> getters[name] = NameTableEntry(value, constant)
+            value.getAttributeOrNull("<flag:prop:setter>") -> setters[name] = NameTableEntry(value, constant)
+            value.getAttributeOrNull("<flag:meta>") -> metaMethods[name] = NameTableEntry(value, constant)
+            value.getAttributeOrNull("<flag:static>") -> staticMethods[name] = NameTableEntry(value, constant)
+            else -> {
+                return super.set(name, value, constant)
+            }
+        }
+        return null
+    }
+}
+
+
+class MultiClosureNameTable(name: String, superTable: NameTable? = null, context: FlObject? = null) :
+    NameTable(name, superTable, context) {
+    private val multiTables: MutableList<NameTable> = mutableListOf()
+
+    override fun getOrDefault(name: String, default: FlObject?, checkBuiltins: Boolean): FlObject? {
+        super.getOrDefault(name, null, false)?.let { return it }
+        multiTables.forEach { table -> table.getOrDefault(name, null, false)?.let { return it } }
+        return if (checkBuiltins) builtins.getOrDefault(name, default) else default
+    }
+
+    /**
+     * @return this
+     */
+    fun extend(table: NameTable): MultiClosureNameTable {
+        multiTables.add(table)
+        return this
+    }
+}

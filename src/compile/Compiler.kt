@@ -64,7 +64,10 @@ open class Compiler(filePath: String? = null) : AbstractCompiler(filePath = file
 
         val classComment = comment?.lexeme?.substring(2, comment.lexeme.length - 2)
 
-        addOperation(OpCode.BUILD_CODE, PartialCodeObj(name, scopeStack.pop(), filePath = filePath, comment = classComment))
+        addOperation(
+            OpCode.BUILD_CODE,
+            PartialCodeObj(name, scopeStack.pop(), filePath = filePath, comment = classComment)
+        )
         addOperation(OpCode.BUILD_CLASS, name, packages.size)
     }
 
@@ -85,7 +88,10 @@ open class Compiler(filePath: String? = null) : AbstractCompiler(filePath = file
 
         val functionComment = comment?.lexeme?.substring(2, comment.lexeme.length - 2)
 
-        addOperation(OpCode.BUILD_CODE, PartialCodeObj(name, scopeStack.pop(), filePath = filePath, comment = functionComment))
+        addOperation(
+            OpCode.BUILD_CODE,
+            PartialCodeObj(name, scopeStack.pop(), filePath = filePath, comment = functionComment)
+        )
         addOperation(
             OpCode.BUILD_FUNCTION, PartialFunction(isGenerator, positionals, defaults, varargs, varkwargs)
         )
@@ -270,8 +276,7 @@ open class Compiler(filePath: String? = null) : AbstractCompiler(filePath = file
     override fun visitIfNotNullThen(condition: Node, thenBranch: Node) {
         val end = Jump()
         visit(condition)
-        addOperation(OpCode.JUMP_IF_NULL, end)
-        addOperation(OpCode.POP_TOP)
+        addOperation(OpCode.POP_JUMP_IF_NULL, end)
         visit(thenBranch)
         jumpHere(end)
     }

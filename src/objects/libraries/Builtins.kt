@@ -7,17 +7,32 @@ import objects.base.collections.FlArrayObj
 import objects.base.collections.FlDictionaryObj
 import objects.base.collections.FlListObj
 import objects.callable.*
-import runtime.NameTable
+import runtime.ClassNameTable
 import runtime.throwObj
-
-
-val MetaSentinel = FlObject(FlNullClass)
 
 
 object BuiltinFunMeta : KtFunction(ParameterSpec("meta", listOf("callable"))) {
     override fun accept(callContext: KtCallContext): FlObject? {
         val callable = callContext.getLocalOfType("callable", FlCallableObj::class) ?: return null
-        callable.attributes["<flag:meta>"] = AttributeEntry(MetaSentinel, true)
+        callable.attributes["<flag:meta>"] = AttributeEntry(True, true)
+        return callable
+    }
+}
+
+
+object BuiltinFunGetter : KtFunction(ParameterSpec("getter", listOf("callable"))) {
+    override fun accept(callContext: KtCallContext): FlObject? {
+        val callable = callContext.getLocalOfType("callable", FlCallableObj::class) ?: return null
+        callable.attributes["<flag:prop:getter>"] = AttributeEntry(True, true)
+        return callable
+    }
+}
+
+
+object BuiltinFunSetter : KtFunction(ParameterSpec("setter", listOf("callable"))) {
+    override fun accept(callContext: KtCallContext): FlObject? {
+        val callable = callContext.getLocalOfType("callable", FlCallableObj::class) ?: return null
+        callable.attributes["<flag:prop:setter>"] = AttributeEntry(True, true)
         return callable
     }
 }
@@ -121,7 +136,7 @@ object BuiltinFunClassOf : KtFunction(ParameterSpec("functionOf", listOf("name",
             classes.add(cls.reflectingClass)
         }
 
-        val nameTable = NameTable(name)
+        val nameTable = ClassNameTable(name)
         nameTable.setAll(attributes)
 
         return createUserDefinedFlClass(name, classes, nameTable)?.reflectObj

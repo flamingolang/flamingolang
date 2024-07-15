@@ -13,10 +13,13 @@ open class FlNumberObj(open val number: Double, cls: FlClass = FlNumberClass, re
         return null
     }
 }
+
 val FlNumberClass = TrustedFlClass("Number")
 
 
-class FlAtomicNumObj(override var number: Double, cls: FlClass = FlAtomicNumberClass, readOnly: Boolean = true) : FlNumberObj(number, cls, readOnly)
+class FlAtomicNumObj(override var number: Double, cls: FlClass = FlAtomicNumberClass, readOnly: Boolean = true) :
+    FlNumberObj(number, cls, readOnly)
+
 val FlAtomicNumberClass = TrustedFlClass("AtomicNumber", listOf(FlNumberClass))
 
 

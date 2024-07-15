@@ -17,6 +17,7 @@ val ZeroDivisionException = TrustedFlClass("ZeroDivisionException", listOf(Excep
 
 // anything that should immediately halt execution to be dealt with
 val FatalError = TrustedFlClass("Fatality", listOf(Throwable))
+
 // val NotImplementedFatalError = TrustedFlClass("NotImplementedFatality", listOf(FatalError))
 val ImportFatality = TrustedFlClass("ImportFatality", listOf(FatalError))
 val StackOverflowFatality = TrustedFlClass("StackOverflow", listOf(FatalError))

@@ -1,0 +1,30 @@
+val f = import("#something").all
+
+/*
+    @description
+
+    This documentation covers only the Object *class*, for the Object *type*, please see [here]().
+    The object class is the base class that all things in flamingo inherit from. As such, in all
+    vanilla flamingo scripts, every object will succeed {Object.instanceOf} for operand `Object`.
+
+    The object class adds some basic functionality that any developer may find themself having to
+    utilise for an object with an unknown identity (as is expected for a dynamically typed language).
+*/
+class Object {
+    /*
+        @returns a string representation of the object for the main purpose of debugging
+        @note internally the default of this is to print the object's type name and hashcode
+
+        @annotation meta
+    */
+    fun display_object() = null
+
+    /*
+        @returns a string representation of the object for the main purpose of debugging
+        @note internally the default of this is to use the object's `.display_object` return value
+        @see {Object.display_object}
+
+        @annotation meta
+    */
+    @meta fun to_string() = null
+}

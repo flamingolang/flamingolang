@@ -13,7 +13,7 @@ class FlFunctionObj(
     parameters: ParameterSpec,
     cls: FlClass = FlFunctionClass,
     readOnly: Boolean = true,
-    ) : FlCallableObj<OperationalFrame>(parameters, cls, readOnly = readOnly) {
+) : FlCallableObj<OperationalFrame>(parameters, cls, readOnly = readOnly) {
     override fun makeFrame(locals: HashMap<String, FlObject>): OperationalFrame {
         val frame = OperationalFrame(
             parameters.name,

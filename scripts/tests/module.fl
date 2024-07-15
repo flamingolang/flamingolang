@@ -1,4 +1,5 @@
 import("#flamingo").export {
-    val main = isMain 
+    val main = isMain
     val path = getPath
 }
+println(main(), path())

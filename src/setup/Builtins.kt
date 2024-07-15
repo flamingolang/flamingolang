@@ -54,8 +54,15 @@ fun getStandardBuiltins(): HashMap<String, FlObject> {
 
     builtins["println"] = FlBuiltinObj(BuiltinFunPrintln)
     builtins["dis"] = FlBuiltinObj(BuiltinFunDis)
-    builtins["meta"] = FlBuiltinObj(BuiltinFunMeta)
     builtins["import"] = FlBuiltinObj(BuiltinFunImport)
+
+    // builtin helper decorators
+
+    builtins["meta"] = FlBuiltinObj(BuiltinFunMeta)
+    builtins["getter"] = FlBuiltinObj(BuiltinFunGetter)
+    builtins["setter"] = FlBuiltinObj(BuiltinFunSetter)
+
+    // other builtins
 
     builtins["listOf"] = FlBuiltinObj(BuiltinFunListOf)
     builtins["arrayOf"] = FlBuiltinObj(BuiltinFunArrayOf)

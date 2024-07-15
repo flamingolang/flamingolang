@@ -55,8 +55,8 @@ abstract class AbstractParser(protected val lexer: Lexer) {
                 continue
             }
 
-            if (commentLife == 0)      {
-              commentLife = 1
+            if (commentLife == 0) {
+                commentLife = 1
             } else if (commentLife > 1) {
                 commentBuffer = null
                 commentLife = -1
@@ -130,7 +130,12 @@ class Parser(lexer: Lexer) : AbstractParser(lexer) {
         return false
     }
 
-    private fun parseFunctionOrGenerator(head: Token, isGenerator: Boolean, name: String, comment: Token?): BuildFunction {
+    private fun parseFunctionOrGenerator(
+        head: Token,
+        isGenerator: Boolean,
+        name: String,
+        comment: Token?
+    ): BuildFunction {
         val positionals = mutableListOf<String>()
         val defaults = mutableListOf<String>()
         val defaultValues = mutableListOf<Node>()
@@ -175,7 +180,11 @@ class Parser(lexer: Lexer) : AbstractParser(lexer) {
         )
     }
 
-    private fun unpackDecorators(decorators: MutableList<Node>, function: BuildFunction, isConstant: Boolean): NameAssignment {
+    private fun unpackDecorators(
+        decorators: MutableList<Node>,
+        function: BuildFunction,
+        isConstant: Boolean
+    ): NameAssignment {
         val firstDecorator = decorators.removeLast()
         var decorated = CallObj(firstDecorator.token, firstDecorator, mutableListOf(function), listOf(), listOf())
 
@@ -237,6 +246,7 @@ class Parser(lexer: Lexer) : AbstractParser(lexer) {
                 advance()
 
                 val decorators = mutableListOf(expression())
+                var callExpression: Node
                 while (true) {
                     val operator = current
                     if (match(TokenType.TOKEN_AT)) {
@@ -252,11 +262,22 @@ class Parser(lexer: Lexer) : AbstractParser(lexer) {
                         }
                         val isConstant = match(TokenType.TOKEN_VAL)
                         val name = eat(TokenType.TOKEN_IDENTIFIER, "functions must have a name").lexeme
-                        return unpackDecorators(decorators, parseFunctionOrGenerator(operator, isGenerator, name, comment), isConstant)
-                    } else break
+                        callExpression = unpackDecorators(
+                            decorators,
+                            parseFunctionOrGenerator(operator, isGenerator, name, comment),
+                            isConstant
+                        )
+                        break
+                    } else {
+                        callExpression = expression()
+                        for (decorator in decorators) {
+                            callExpression =
+                                CallObj(decorator.token, decorator, mutableListOf(callExpression), listOf(), listOf())
+                        }
+                        break
+                    }
                 }
-
-                cantParse("decorator must decorate a function") as Node
+                callExpression
             }
 
             TokenType.TOKEN_CONTINUE -> {
@@ -715,7 +736,9 @@ class Parser(lexer: Lexer) : AbstractParser(lexer) {
             TokenType.TOKEN_RAW_STRING -> StringLiteral(atom, atom.lexeme.substring(2, atom.lexeme.length - 1))
 
             TokenType.TOKEN_NUMBER, TokenType.TOKEN_ATOMIC_NUM -> {
-                val number = if (atom.type == TokenType.TOKEN_ATOMIC_NUM) atom.lexeme.substring(0, atom.lexeme.length - 1).toDouble() else atom.lexeme.toDouble()
+                val number =
+                    if (atom.type == TokenType.TOKEN_ATOMIC_NUM) atom.lexeme.substring(0, atom.lexeme.length - 1)
+                        .toDouble() else atom.lexeme.toDouble()
                 if (number > 999999999999999.0) {
                     cantParse("number (%s) is too large".format(number), atom)
                 }
@@ -766,6 +789,12 @@ class Parser(lexer: Lexer) : AbstractParser(lexer) {
                 val callArgument = expression()
 
                 CallObj(atom, callExpression, mutableListOf(callArgument), listOf(), listOf())
+            }
+
+            TokenType.TOKEN_IMPORT -> {
+                val path = atom()
+
+                CallObj(atom, Lookup(atom, "import"), mutableListOf(path), listOf(), listOf())
             }
 
             else -> {

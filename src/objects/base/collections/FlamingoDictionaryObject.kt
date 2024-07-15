@@ -11,7 +11,7 @@ class FlDictionaryObj(
     readOnly: Boolean = true
 ) : FlObject(cls, readOnly = readOnly) {
     override fun getAttributeOrNull(name: String, aroCheck: Boolean, bind: Boolean): FlObject? {
-        dictionary[name] ?. let { return it }
+        dictionary[name]?.let { return it }
         return super.getAttributeOrNull(name, aroCheck, bind = bind)
     }
 }

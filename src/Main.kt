@@ -1,6 +1,6 @@
 import compile.*
-import objects.base.*
-import objects.libraries.*
+import objects.base.Null
+import objects.libraries.mainFrame
 import runtime.*
 import setup.builtins
 import setup.getStandardBuiltins
@@ -97,7 +97,11 @@ fun main(args: Array<String>) {
         mainFrame = frame
 
         compile(
-            file.nameWithoutExtension, readFile(file), outFrame = frame, outFrameOperations = operations, filePath = file.absolutePath
+            file.nameWithoutExtension,
+            readFile(file),
+            outFrame = frame,
+            outFrameOperations = operations,
+            filePath = file.absolutePath
         )
         if (vmThrown != null) {
             printError(vmThrown!!, vmCallStack)
