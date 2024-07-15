@@ -10,7 +10,6 @@ import java.io.File
 import java.net.URI
 import java.nio.file.Path
 import java.util.*
-import kotlin.collections.HashMap
 import kotlin.io.path.*
 
 
@@ -21,12 +20,20 @@ fun peekCall(): Frame? {
     return null
 }
 
-open class FlModuleObj(val name: String, val filePath: String?, cls: FlClass = FlModuleClass, readOnly: Boolean = true) : FlObject(cls, readOnly = readOnly) {
-    val moduleAttributes = HashMap<String, FlObject>()
-
+open class FlModuleObj(
+    val name: String,
+    val filePath: String?,
+    val nameTable: NameTable,
+    cls: FlClass = FlModuleClass,
+    readOnly: Boolean = true
+) : FlObject(cls, readOnly = readOnly) {
     override fun getAttributeOrNull(name: String, aroCheck: Boolean, bind: Boolean): FlObject? {
-        moduleAttributes[name]?.let { return it }
+        nameTable.entries[name]?.value?.let { return it }
         return super.getAttributeOrNull(name, aroCheck, bind = bind)
+    }
+
+    fun setValue(name: String, value: FlObject) {
+        nameTable.entries[name] = NameTableEntry(value, true)
     }
 }
 
@@ -49,11 +56,26 @@ object BuiltinFunModDisplayObj : KtFunction(ParameterSpec("Module.displayObj")) 
     }
 }
 
+
+object BuiltinFunModAll : KtFunction(ParameterSpec("Module.all")) {
+    override fun accept(callContext: KtCallContext): FlObject? {
+        val self = callContext.getObjContextOfType(FlModuleObj::class) ?: return null
+
+        val namesOut = peekCall() ?: return null
+
+        for (entry in self.nameTable.entries) {
+            namesOut.locals.set(entry.key, entry.value.value, entry.value.constant) ?: return null
+        }
+
+        return self
+    }
+}
+
 object BuiltinFunModGetPath : KtFunction(ParameterSpec("Module.getPath")) {
     override fun accept(callContext: KtCallContext): FlObject? {
         val self = callContext.getObjContextOfType(FlModuleObj::class) ?: return null
-        self.filePath ?. let { return stringOf(it) }
-        return Null 
+        self.filePath?.let { return stringOf(it) }
+        return Null
     }
 }
 
@@ -63,19 +85,18 @@ object BuiltinFunModExport : KtFunction(ParameterSpec("Module.export", listOf("n
         val self = callContext.getObjContextOfType(FlModuleObj::class) ?: return null
         val namespace = callContext.getLocalOfType("namespace", FlCodeObj::class) ?: return null
 
-        val exportTo = peekCall() ?: return null
+        val namesOut = peekCall() ?: return null
 
-        val moduleNameTable = NameTable(self.name, namespace.nativeClosure)
-        val frame = OperationalFrame(namespace.name, namespace.operations, closure = moduleNameTable)
-
-        for (entry in self.moduleAttributes.entries) {
-            moduleNameTable.set(entry.key, entry.value, true) ?: return null
-        }
+        val frame = OperationalFrame(
+            namespace.name,
+            namespace.operations,
+            closure = MultiClosureNameTable(self.name, namespace.nativeClosure).extend(self.nameTable)
+        )
 
         execute(frame).result ?: return null
 
         for (entry in frame.locals.entries) {
-            exportTo.locals.set(entry.key, entry.value.value, entry.value.constant) ?: return null
+            namesOut.locals.set(entry.key, entry.value.value, entry.value.constant) ?: return null
         }
 
         return self
@@ -83,13 +104,12 @@ object BuiltinFunModExport : KtFunction(ParameterSpec("Module.export", listOf("n
 }
 
 
-
 val fileModules = HashMap<String, FlObject>()
 val builtinModules = HashMap<String, FlObject>()
 
 val importStack = Stack<String>()
 
-val BUILTIN_IMPORT = "^#([a-zA-Z0-9_$]+)$".toRegex()
+val BUILTIN_IMPORT = "^#([a-zA-Z0-9_\\-$]+)$".toRegex()
 val RELATIVE_SMART_IMPORT = "(^(\\.\\.)*)([a-zA-Z0-9_\\-\$]+(\\.[a-zA-Z0-9_\\-\$]+)*)\$".toRegex()
 val RELATIVE_IMPORT = "^(\\.\\./)*([a-zA-Z0-9_\\-\$] ?)+(/[a-zA-Z0-9_\\-\$] ?)*\$".toRegex()
 
@@ -110,7 +130,7 @@ fun importModuleFromPath(name: String, path: String): FlObject? {
     val frame = compile(name, readFile(file), filePath = path) ?: return null
     execute(frame).thrown?.let { return null }
 
-    val module = FlModuleObj(name, path)
+    val module = FlModuleObj(name, path, frame.locals)
 
     var exporterCandidate: FlObject? = null
 
@@ -122,7 +142,6 @@ fun importModuleFromPath(name: String, path: String): FlObject? {
             }
             exporterCandidate = entry.value.value
         }
-        module.moduleAttributes[entry.key] = entry.value.value
     }
 
     importStack.pop()
@@ -137,7 +156,7 @@ object BuiltinFunImport : KtFunction(ParameterSpec("import", listOf("path"))) {
 
         val importBuiltinPath = BUILTIN_IMPORT.matchEntire(path)?.groups?.get(1)?.value
         if (importBuiltinPath != null) {
-            builtinModules[importBuiltinPath] ?. let { return it }
+            builtinModules[importBuiltinPath]?.let { return it }
 
             throwObj("there is no builtin module named '%s'".format(importBuiltinPath), ImportFatality)
             return null
@@ -146,7 +165,10 @@ object BuiltinFunImport : KtFunction(ParameterSpec("import", listOf("path"))) {
         val importBase = peekCall() ?: return null
 
         if (importBase !is OperationalFrame || importBase.filePath == null) {
-            throwObj("could not automatically resolve path for import, please use a different import function", ImportFatality)
+            throwObj(
+                "could not automatically resolve path for import, please use a different import function",
+                ImportFatality
+            )
             return null
         }
 
@@ -237,7 +259,10 @@ object BuiltinFunInclude : KtFunction(ParameterSpec("include", listOf("path", "i
         val importBase = peekCall() ?: return null
 
         if (importBase !is OperationalFrame || importBase.filePath == null) {
-            throwObj("could not automatically resolve path for import, please use a different import function", ImportFatality)
+            throwObj(
+                "could not automatically resolve path for import, please use a different import function",
+                ImportFatality
+            )
             return null
         }
 
@@ -293,11 +318,11 @@ object BuiltinFunInclude : KtFunction(ParameterSpec("include", listOf("path", "i
 
 
 fun getImportLibrary(): FlModuleObj {
-    val importLib = FlModuleObj("importlib", null)
+    val importLib = FlModuleObj("importlib", null, NameTable("importlib"))
 
-    importLib.moduleAttributes["import"] = FlBuiltinObj(BuiltinFunImport)
-    importLib.moduleAttributes["include"] = FlBuiltinObj(BuiltinFunInclude)
-    importLib.moduleAttributes["exporter"] = FlBuiltinObj(BuiltinFunImpLibExporter)
+    importLib.nameTable.set("import", FlBuiltinObj(BuiltinFunImport), true)
+    importLib.nameTable.set("include", FlBuiltinObj(BuiltinFunInclude), true)
+    importLib.nameTable.set("exporter", FlBuiltinObj(BuiltinFunImpLibExporter), true)
 
     return importLib
 }

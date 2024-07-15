@@ -3,11 +3,13 @@ package objects.libraries
 import objects.base.FlObject
 import objects.base.Null
 import objects.base.booleanOf
-import objects.base.collections.FlDictionaryObj
-import objects.base.collections.FlListObj
 import objects.base.stringOf
-import objects.callable.*
+import objects.callable.FlBuiltinObj
+import objects.callable.KtCallContext
+import objects.callable.KtFunction
+import objects.callable.ParameterSpec
 import runtime.Frame
+import runtime.NameTable
 import runtime.OperationalFrame
 
 
@@ -30,11 +32,20 @@ object BuiltinFunFlGetPath : KtFunction(ParameterSpec("getPath")) {
     }
 }
 
-fun getFlamingoLibrary(): FlModuleObj {
-    val flamingoLibrary = FlModuleObj("flamingo", null)
+object BuiltinFunFlGetName : KtFunction(ParameterSpec("getName")) {
+    override fun accept(callContext: KtCallContext): FlObject? {
+        val topFrame = peekCall() ?: return null
 
-    flamingoLibrary.moduleAttributes["isMain"] = FlBuiltinObj(BuiltinFunFlIsMain)
-    flamingoLibrary.moduleAttributes["getPath"] = FlBuiltinObj(BuiltinFunFlGetPath)
+        return stringOf(topFrame.name)
+    }
+}
+
+fun getFlamingoLibrary(): FlModuleObj {
+    val flamingoLibrary = FlModuleObj("flamingo", null, NameTable("flamingo"))
+
+    flamingoLibrary.setValue("isMain", FlBuiltinObj(BuiltinFunFlIsMain))
+    flamingoLibrary.setValue("getPath", FlBuiltinObj(BuiltinFunFlGetPath))
+    flamingoLibrary.setValue("getName", FlBuiltinObj(BuiltinFunFlGetName))
 
     return flamingoLibrary
 }

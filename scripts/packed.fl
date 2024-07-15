@@ -1,0 +1,101 @@
+// disassembles the entire code object, very nice for debugging
+val module = {
+    // simple list declaration
+    val a = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    // print all even numbers vanilla
+    for (i in a) if (i % 2 == 0) println("{i} in 'a' is even")
+    // print all even numbers with code objects
+    val b = a.map { it % 2 == 0 }
+    // type checking and class checking
+    println("isArray(a) {isArray(a)}, isArray(b) {isArray(b)}, a.isOfClass(iterable) {a.isOfClass(iterable)}, b.isOfClass(iterable) {b.isOfClass(iterable)}")
+    // sample generator function for getting fibonacci sequences
+    gen fun gen$fib(max) {
+        var a = 1, b = 0, i = 0
+        while (i < max - 1) {
+            var i = i + 1, c = a, a = b + a, b = c
+            return a
+        }
+        return a
+    }
+    // sample normal function for accumulating fibonacci sequence
+    fun fib(max) {
+        var a = 1, b = 0, i = 0, f = []
+        while (i < max) {
+            var i = i + 1, c = a, a = b + a, b = c
+            f.add(a)
+        }
+        return f
+    }
+    // use of generators to create generator objects
+    fib5 = gen$fib(5)
+    fib10 = gen$fib(10)
+    // ability to loop through generators
+    for (i in fib5) println("gen fib(5) {i}")
+    for (i in fib10) println("gen fib(10) {i}")
+    // looping through returned list from normal function
+    for (i in fib(15)) println("fib(15) {i}")
+    // looping through returned list using for each which keeps track of iteration
+    fib(15).forEach { println("{iter + 1}. {it}") }
+    // creating a fold function that only needs to use code objects (basically how it is internally)
+    fun fold(collection, initial, transform) {
+        var accum = initial
+        for (it in collection) accum = transform.callLetting(accum=accum, it=it)
+        return accum
+    }
+    // creating a sum function which sums all items in a collection using our fold
+    fun sum(collection, initial=0) = fold(collection, initial, { accum + it })
+    // allows for use of attributes of an object to be used in a namespace as super-scoped values
+    println("a has {a.size() } items")
+    a.letContext {
+        for (i in subject) {
+            // no commodification here because the list iter returns a frozen in place iterator
+            println("adding {i}")
+            add(i)
+        }
+    }
+    println("a has {a.size()} items")
+    println(a)
+    println(a.filter { it % 2 != 0 }.map { it * 2 })
+    println(a.where { it % 2 != 0 } { it * 2 })
+
+    fun where(collection, predicate, transform) {
+        val transformed = []
+        for (item in collection) {
+            if (predicate.callLetting(it = item)) {
+                transformed.add(transform.callLetting(it = item))
+            }
+        }
+        return transformed
+    }
+    println(where(a, { it % 2 != 0 }, { it * 2 }))
+}
+
+class Object {
+    /*@doc
+
+    @returns a representation of the object that is more useful for debugging i.e. more representative of the
+    object as opposed ot what the object represents
+
+    @return-type #String
+
+    @doc*/
+    fun meta$displayObject() = null
+
+    /*@doc
+
+    @returns a representation of the object that is meant to seamlessly concatenate with a string object, e.g used
+    in println
+
+    @return-type #String
+
+    @doc*/
+    fun meta$displayObject() = null
+
+    /*@doc
+
+    @description Should check if the operand and self are compatible for addition and then return the result if
+    possible, otherwise should throw some kind of error e.g. #TypeError
+
+    @doc*/
+    fun meta$add(operand) = null
+}

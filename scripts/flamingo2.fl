@@ -124,3 +124,9 @@ val shaunHTMLBuilder = builder(shaun)
 val utils = import("utils").export {
     val any = any
 }
+
+import("#flamingo").export {
+    val main = isMain
+    val path = getPath
+}
+println(main(), path())

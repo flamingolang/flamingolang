@@ -46,7 +46,10 @@ open class FlObject(val cls: FlClass, private val readOnly: Boolean = true) {
     fun isOfType(type: KClass<out FlObject>): Boolean = type.isInstance(this)
     fun <T : FlObject> assertCast(what: String, type: KClass<T>): T? {
         if (type.isInstance(this)) return type.cast(this)
-        throwObj("'%s' was expected to be %s, but got %s".format(what, infraTypeName(type), infraTypeName(this::class)), TypeError)
+        throwObj(
+            "'%s' was expected to be %s, but got %s".format(what, infraTypeName(type), infraTypeName(this::class)),
+            TypeError
+        )
         return null
     }
 
@@ -71,15 +74,26 @@ open class FlObject(val cls: FlClass, private val readOnly: Boolean = true) {
         return null
     }
 
-    fun <T : FlObject> getAttributeOfType(name: String, type: KClass<T>, aroCheck: Boolean = true, bind: Boolean = true): T? =
+    fun <T : FlObject> getAttributeOfType(
+        name: String,
+        type: KClass<T>,
+        aroCheck: Boolean = true,
+        bind: Boolean = true
+    ): T? =
         getAttribute(name, aroCheck = aroCheck, bind = bind)?.let { return it.assertCast("%s".format(name), type) }
 
 
-    fun getAttributeOrDefault(name: String, default: FlObject, aroCheck: Boolean = true, bind: Boolean = true): FlObject {
+    fun getAttributeOrDefault(
+        name: String,
+        default: FlObject,
+        aroCheck: Boolean = true,
+        bind: Boolean = true
+    ): FlObject {
         return getAttributeOrNull(name, aroCheck = aroCheck, bind = bind) ?: default
     }
 
     fun getAttribute(name: String, aroCheck: Boolean = true, bind: Boolean = true): FlObject? {
+        getAttributeOrNull("meta\$getter\$${name}")?.let { return it.call() }
         getAttributeOrNull(name, aroCheck = aroCheck, bind = bind)?.let { return it }
         throwObj("%s type object has no attribute '%s'".format(cls.name, name), AttributeError)
         return null
@@ -95,6 +109,11 @@ open class FlObject(val cls: FlClass, private val readOnly: Boolean = true) {
         if (readOnly) {
             throwObj("%s type object is a read only object".format(cls.name), AttributeError)
             return null
+        }
+
+        getAttributeOrNull("meta\$setter\$${name}")?.let {
+            it.call(listOf(value)) ?: return null
+            return Unit
         }
 
         val entry = attributes.getOrPut(name) { AttributeEntry(Null, constant) }

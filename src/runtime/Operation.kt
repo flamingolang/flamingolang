@@ -11,7 +11,6 @@ import objects.base.collections.FlArrayObj
 import objects.base.collections.FlListObj
 import objects.base.collections.FlRangeObj
 import objects.callable.*
-import objects.libraries.MetaSentinel
 import runtime.OpCode.*
 
 /**
@@ -46,6 +45,7 @@ import runtime.OpCode.*
  * @property BUILD_CODE (obj: FlCodeObj)
  * @property BINARY_OPERATION (type: BinaryOperationType)
  * @property UNARY_OPERATION (type: UnaryOperationType)
+ * @property POP_JUMP_IF_NULL (to: Jump)
  *
  * @property CALL (arguments: Int, keywords: Int)
  * @property INDEX_TOP (arguments: Int, keywords: Int)
@@ -63,7 +63,7 @@ enum class OpCode {
 
     // take 1 operand
     LOAD_CONST, JUMP_ABSOLUTE, LOAD_NAME, JUMP_IF_TRUE, JUMP_IF_FALSE, STORE_NAME_LAZY, STORE_NAME, STORE_CONST, BUILD_LIST, BUILD_ARRAY, GET_ATTR, POP_JUMP_IF_FALSE,
-    BINARY_OPERATION, UNARY_OPERATION, JUMP_IF_NULL, BUILD_STRING, SETUP_TRY, STORE_ATTR, ITER_NEXT, BUILD_FUNCTION, BUILD_CODE,
+    BINARY_OPERATION, UNARY_OPERATION, JUMP_IF_NULL, POP_JUMP_IF_NULL, BUILD_STRING, SETUP_TRY, STORE_ATTR, ITER_NEXT, BUILD_FUNCTION, BUILD_CODE,
 
     // take 2+ operands
     CALL, INDEX_TOP, SETUP_TRY_AS, BUILD_CLASS, CREATE_ATOM_NUM,
@@ -98,11 +98,7 @@ open class Operation(val opCode: OpCode, val operands: Array<Any>) {
             }
 
             RETURN_VALUE -> {
-                // setting an error because this opcode should be handled by the Vm's call method
-                throwObj(
-                    "Operational frame tried to handle returning a value outside of the Vm's call method",
-                    FatalError
-                )
+                frame.returnBuffer = popObj()
             }
 
             ADD_FRAME -> {
@@ -203,7 +199,10 @@ open class Operation(val opCode: OpCode, val operands: Array<Any>) {
                         addObj(result)
                     }
 
-                    BinaryOperationType.COMP_IS -> { addObj(booleanOf(left == right)) }
+                    BinaryOperationType.COMP_IS -> {
+                        addObj(booleanOf(left == right))
+                    }
+
                     BinaryOperationType.COMP_IS_NOT -> addObj(booleanOf(left != right))
                 }
             }
@@ -225,23 +224,13 @@ open class Operation(val opCode: OpCode, val operands: Array<Any>) {
             STORE_NAME -> {
                 val obj = popObj()
                 val name = operands[0] as String
-                if (obj.getAttributeOrDefault(
-                        "<flag:meta>",
-                        Null
-                    ) == MetaSentinel && frame.locals is ClassNameTable
-                ) frame.locals.set("meta\$$name", obj)
-                else frame.locals.set(name, obj)
+                frame.locals.set(name, obj)
             }
 
             STORE_CONST -> {
                 val obj = popObj()
                 val name = operands[0] as String
-                if (obj.getAttributeOrDefault(
-                        "<flag:meta>",
-                        Null
-                    ) == MetaSentinel && frame.locals is ClassNameTable
-                ) frame.locals.set("meta\$$name", obj, constant = true)
-                else frame.locals.set(name, obj, constant = true)
+                frame.locals.set(name, obj, constant = true)
             }
 
             BUILD_LIST -> {
@@ -294,6 +283,10 @@ open class Operation(val opCode: OpCode, val operands: Array<Any>) {
 
             JUMP_IF_NULL -> {
                 if (topObj() == Null) frame.ip = (operands[0] as Jump).to - 1
+            }
+
+            POP_JUMP_IF_NULL -> {
+                if (popObj() != Null) frame.ip = (operands[0] as Jump).to - 1
             }
 
             BUILD_STRING -> {
@@ -367,7 +360,8 @@ open class Operation(val opCode: OpCode, val operands: Array<Any>) {
                     partialFunction.varkwargs
                 )
                 val function = FlFunctionObj(codeObj, parameterSpec)
-                if (codeObj.comment != null) function.attributes["meta\$doc"] = AttributeEntry(stringOf(codeObj.comment), true)
+                if (codeObj.comment != null) function.attributes["meta\$doc"] =
+                    AttributeEntry(stringOf(codeObj.comment), true)
                 addObj(function)
             }
 
@@ -386,7 +380,8 @@ open class Operation(val opCode: OpCode, val operands: Array<Any>) {
                     "%s.<class '%s'>".format(frame.name, name), codeObj.operations
                 )
 
-                classFrame.locals = ClassNameTable(classFrame.name, codeObj.nativeClosure)
+                val classLocals = ClassNameTable(classFrame.name, codeObj.nativeClosure)
+                classFrame.locals = classLocals
 
                 val result = runtime.execute(classFrame)
                 if (result.thrown != null) return
@@ -405,7 +400,7 @@ open class Operation(val opCode: OpCode, val operands: Array<Any>) {
                     supers.add(maybeClass.reflectingClass)
                 }
 
-                val cls = createUserDefinedFlClass(name, supers, classFrame.locals) ?: return
+                val cls = createUserDefinedFlClass(name, supers, classLocals) ?: return
                 if (codeObj.comment != null)
                     cls.reflectObj.attributes["meta\$doc"] = AttributeEntry(stringOf(codeObj.comment), true)
                 addObj(cls.reflectObj)
@@ -418,7 +413,15 @@ open class Operation(val opCode: OpCode, val operands: Array<Any>) {
 
             BUILD_CODE -> {
                 val code = operands[0] as PartialCodeObj
-                addObj(FlCodeObj(code.scope.name, code.scope.operations, code.filePath, frame.locals, comment = code.comment))
+                addObj(
+                    FlCodeObj(
+                        code.scope.name,
+                        code.scope.operations,
+                        code.filePath,
+                        frame.locals,
+                        comment = code.comment
+                    )
+                )
             }
 
             UNARY_OPERATION -> {

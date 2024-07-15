@@ -1,0 +1,95 @@
+class ListReplacement(List) {
+    @meta fun val displayObject() = "ListReplacement[{self.size()}]"
+    @meta fun val isIterable() = true
+    @meta fun val iter() = ListRepIter(self)
+}
+
+class ListRepIter {
+    @meta fun val init(listReplacement) {
+        self.listReplacement = listReplacement
+        self.pos = 0
+    }
+
+    fun val hasNextObj() = self.pos < self.listReplacement.items.size()
+    fun val nextObj() {
+        item = self.listReplacement.items[self.pos]
+        pos = self.pos
+        self.pos = self.pos + 1
+        return (pos)
+    }
+}
+
+val l = filter(ListReplacement, [1, 2, 3, 4, 5, 6, 6]) { it.isEven() }
+
+val testClass = classOf("testClass", arrayOf(), dictOf(meta$init=functionOf("init", ("object", ), dictOf(), { self.object = object })))
+
+class TestClass { @meta fun init(object) { self.object = object } }
+
+class A {
+    @meta fun val init(a) {
+        self.a = a
+    }
+
+    @meta fun displayObject() = "{self.getClass().getName()}({self.a})"
+
+    fun hello() = "hello"
+    fun world() = ", world"
+}
+
+
+class B (A) {
+    @meta fun val init(a) {
+        super(A, a)
+    }
+
+    fun hello() = super.hello()
+    fun world() = super.world() + "!"
+}
+
+
+import("flamingo2")
+
+
+class F {
+    @meta fun init(init) {
+        self.name_val = init
+    }
+
+    @getter fun val name() = "Name: {self.name_val}"
+
+    @setter fun val name(new_value) {
+        self.name_val = new_value
+    }
+}
+
+val f = F("Shaun")
+
+import("#flamingo").export {
+    val main = isMain,
+        path = getPath,
+        name = getName
+}
+
+if (main()) {
+    println("started up script", name(), "@", path())
+}
+
+fun test(something) {
+    something?.let { @returns it }
+    return 0
+}
+
+class Object {
+    /*
+        @returns a string representation of the object for the main purpose of debugging
+        @note internally the default of this is to print the object's type name and hashcode
+    */
+    @meta fun display_object() = null
+
+    /*
+        @returns a string representation of the object for the main purpose of debugging
+        @note internally the default of this is to use the object's `.display_object` return value
+        @see {Object.display_object}
+    */
+    @meta fun to_string() = null
+}

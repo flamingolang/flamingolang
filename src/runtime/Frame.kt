@@ -1,7 +1,6 @@
 package runtime
 
 import objects.base.FlObject
-import objects.callable.KtFunction
 import java.util.*
 
 /**
@@ -9,8 +8,8 @@ import java.util.*
  */
 open class Frame(val name: String, closure: NameTable? = null, initLocals: Map<String, FlObject>? = null) {
     val stack = Stack<FlObject>()
-
     var locals = NameTable(name, closure)
+    var returnBuffer: FlObject? = null
 
     init {
         initLocals?.let { locals.setAll(it) }
@@ -53,10 +52,6 @@ class OperationalFrame(
         if (vmThrown == null) ip++
     }
 
-    fun matchOperation(opCode: OpCode): Boolean {
-        return operations.elementAt(ip).opCode == opCode
-    }
-
     fun currentOperation() = operations.elementAt(ip)
     fun lastOperation() = operations.elementAt(ip - 1)
 
@@ -74,4 +69,4 @@ class OperationalFrame(
 }
 
 
-class BuiltinFunctionFrame(name: String, val ktFunction: KtFunction) : Frame(name)
+class BuiltinFunctionFrame(name: String) : Frame(name)

@@ -103,3 +103,39 @@ object BuiltinFunStringToNumOrNull : KtFunction(ParameterSpec("String.toNumberOr
         return numberOf(converted)
     }
 }
+
+
+// atomic
+
+object BuiltinFunStringToAtom : KtFunction(ParameterSpec("String.toAtom")) {
+    override fun accept(callContext: KtCallContext): FlObject? {
+        val self = callContext.getObjContextOfType(FlStringObj::class) ?: return null
+        return FlAtomicStrObj(self.string)
+    }
+}
+
+
+object BuiltinFunAtomicStrIAdd : KtFunction(ParameterSpec("AtomicString.iadd", listOf("operand"))) {
+    override fun accept(callContext: KtCallContext): FlObject? {
+        val self = callContext.getObjContextOfType(FlAtomicStrObj::class) ?: return null
+        val operand = callContext.getLocalOfType("operand", FlStringObj::class) ?: return null
+        val result = self.callAttributeAssertCast("meta\$add", FlStringObj::class, listOf(operand)) ?: return null
+        self.stringBuilder.append(result)
+        return self
+    }
+}
+
+
+object BuiltinFunAtomicStrIFormat : KtFunction(ParameterSpec("AtomicString.iformat", listOf("operand"))) {
+    override fun accept(callContext: KtCallContext): FlObject? {
+        val self = callContext.getObjContextOfType(FlAtomicStrObj::class) ?: return null
+        val operand = callContext.getLocalOfType("operand", FlStringObj::class) ?: return null
+        val result = self.callAttributeAssertCast("format", FlStringObj::class, listOf(operand)) ?: return null
+        self.stringBuilder.clear()
+        self.stringBuilder.append(result.string)
+        return self
+    }
+}
+
+
+

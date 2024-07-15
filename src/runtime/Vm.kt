@@ -83,16 +83,20 @@ fun call(): FlObject? {
             } else return null
         }
 
-        if (!currFrame.hasFinished()) {
-            if (currFrame is OperationalFrame && currFrame.matchOperation(OpCode.RETURN_VALUE)) {
-                currFrame.ip++
-                val returnValue = popObj()
-                if (currFrame == frame) return returnValue
-                popCall()
-                addObj(returnValue)
+        val returnBuffer = currFrame.returnBuffer
+        if (returnBuffer != null) {
+            currFrame.returnBuffer = null
+            if (currFrame == frame) {
+                return returnBuffer
             } else {
-                currFrame.next()
+                popCall()
+                addObj(returnBuffer)
             }
+            continue
+        }
+
+        if (!currFrame.hasFinished()) {
+            currFrame.next()
         } else {
             if (currFrame == frame) {
                 return Null

@@ -39,9 +39,9 @@ fun initClasses() {
             "plus"
         ).forEach { mn -> it.setClassAttribute("meta\$$mn", FlBuiltinObj(ErrWrapperExst(mn))) }
 
-        it.setClassAttribute("getClass", FlBuiltinObj(BuiltinFunObjGetClass))
+        it.setClassAttribute("meta\$getter\$type", FlBuiltinObj(BuiltinFunObjGetClass))
         it.setClassAttribute("instanceOf", FlBuiltinObj(BuiltinFunObjInstanceOf))
-        it.setClassAttribute("aro", FlBuiltinObj(BuiltinFunObjAro))
+        it.setClassAttribute("meta\$getter\$aro", FlBuiltinObj(BuiltinFunObjAro))
 
         it.setClassAttribute("let", FlBuiltinObj(BuiltinFunObjLet))
         it.setClassAttribute("letIf", FlBuiltinObj(BuiltinFunObjLetIf))
@@ -63,9 +63,9 @@ fun initClasses() {
         it.setClassAttribute("meta\$call", FlBuiltinObj(BuiltinFunClsCall))
         it.setClassAttribute("meta\$displayObject", FlBuiltinObj(BuiltinFunClsDisplayObj))
 
-        it.setClassAttribute("getName", FlBuiltinObj(BuiltinFunClsGetName))
-        it.setClassAttribute("getBases", FlBuiltinObj(BuiltinFunClsGetBases))
-        it.setClassAttribute("getClassAttributes", FlBuiltinObj(BuiltinFunClsGetClsAttrs))
+        it.setClassAttribute("meta\$getter\$name", FlBuiltinObj(BuiltinFunClsGetName))
+        it.setClassAttribute("meta\$getter\$bases", FlBuiltinObj(BuiltinFunClsGetBases))
+        it.setClassAttribute("meta\$getter\$attributes", FlBuiltinObj(BuiltinFunClsGetClsAttrs))
     }
     // callable
     FlCallableClass.let {
@@ -82,7 +82,7 @@ fun initClasses() {
 
         it.setClassAttribute("callLetting", FlBuiltinObj(BuiltinFunCodeObjCallLetting))
         it.setClassAttribute("callLettingIgnoreThrow", FlBuiltinObj(BuiltinFunCodeObjCallLettingIgnore))
-        it.setClassAttribute("getName", FlBuiltinObj(BuiltinFunCodeObjGetName))
+        it.setClassAttribute("meta\$getter\$name", FlBuiltinObj(BuiltinFunCodeObjGetName))
     }
     // generic iterator
     FlGenericIteratorClass.setClassAttribute("hasNextObj", FlBuiltinObj(BuiltinFunGenIterHasNextObj))
@@ -100,9 +100,9 @@ fun initClasses() {
         it.setClassAttribute("addFirst", FlBuiltinObj(BuiltinFunListAddFirst))
         it.setClassAttribute("insert", FlBuiltinObj(BuiltinFunListInsert))
         it.setClassAttribute("remove", FlBuiltinObj(BuiltinFunListRemove))
-        it.setClassAttribute("removeObjs", FlBuiltinObj(BuiltinFunListRemoveObjs))
+        it.setClassAttribute("removeObjects", FlBuiltinObj(BuiltinFunListRemoveObjs))
         it.setClassAttribute("clear", FlBuiltinObj(BuiltinFunListClear))
-        it.setClassAttribute("size", FlBuiltinObj(BuiltinFunListSize))
+        it.setClassAttribute("meta\$getter\$size", FlBuiltinObj(BuiltinFunListSize))
 
         it.setClassAttribute("map", FlBuiltinObj(BuiltinFunListMap))
         it.setClassAttribute("mapped", FlBuiltinObj(BuiltinFunListMapped))
@@ -157,7 +157,7 @@ fun initClasses() {
         it.setClassAttribute("floor", FlBuiltinObj(BuiltinFunNumberFloor))
         it.setClassAttribute("ceil", FlBuiltinObj(BuiltinFunNumberCeil))
 
-        it.setClassAttribute("toAtom", FlBuiltinObj(BuiltinFunNumberToAtom))
+        it.setClassAttribute("meta\$getter\$atom", FlBuiltinObj(BuiltinFunNumberToAtom))
     }
     // Atomic number
     FlAtomicNumberClass.let {
@@ -189,6 +189,13 @@ fun initClasses() {
 
         it.setClassAttribute("format", FlBuiltinObj(BuiltinFunStringFormat))
         it.setClassAttribute("toNumberOrNull", FlBuiltinObj(BuiltinFunStringToNumOrNull))
+
+        it.setClassAttribute("meta\$getter\$atom", FlBuiltinObj(BuiltinFunStringToAtom))
+    }
+    // atomic string
+    FlAtomicStringClass.let {
+        it.setClassAttribute("iadd", FlBuiltinObj(BuiltinFunAtomicStrIAdd))
+        it.setClassAttribute("iformat", FlBuiltinObj(BuiltinFunAtomicStrIFormat))
     }
     // boolean
     FlBooleanClass.let {
@@ -199,7 +206,7 @@ fun initClasses() {
     }
     // null
     FlNullClass.let {
-        it.setClassAttribute("meta\$new", FlBuiltinObj(ErrWrapperNew(it,)))
+        it.setClassAttribute("meta\$new", FlBuiltinObj(ErrWrapperNew(it)))
 
         it.setClassAttribute("meta\$displayObject", FlBuiltinObj(BuiltinFunNullDisplayObj))
         it.setClassAttribute("meta\$truthy", FlBuiltinObj(BuiltinFunNullTruthy))
@@ -208,6 +215,8 @@ fun initClasses() {
     FlModuleClass.let {
         it.setClassAttribute("meta\$new", FlBuiltinObj(ErrWrapperNew(it, "moduleOf")))
         it.setClassAttribute("meta\$displayObject", FlBuiltinObj(BuiltinFunModDisplayObj))
+
+        it.setClassAttribute("meta\$getter\$all", FlBuiltinObj(BuiltinFunModAll))
 
         it.setClassAttribute("export", FlBuiltinObj(BuiltinFunModExport))
         it.setClassAttribute("getPath", FlBuiltinObj(BuiltinFunModGetPath))

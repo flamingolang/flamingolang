@@ -4,14 +4,9 @@ import objects.base.*
 import objects.base.collections.FlArrayObj
 import objects.base.collections.FlDictionaryObj
 import objects.base.collections.FlListObj
-import objects.callable.FlCodeObj
-import objects.callable.KtCallContext
-import objects.callable.KtFunction
-import objects.callable.ParameterSpec
-import runtime.NameTable
-import runtime.OperationalFrame
-import runtime.execute
-import runtime.throwObj
+import objects.callable.*
+import objects.libraries.peekCall
+import runtime.*
 
 class ErrWrapperExst(val name: String) :
     KtFunction(ParameterSpec(name, varargs = "args", varkwargs = "kwargs")) {
@@ -78,20 +73,48 @@ object BuiltinFunObjGetClass : KtFunction(ParameterSpec("Obj.getClass")) {
     }
 }
 
+class BuiltinFunObjLetReturns(private val escapeFrame: Frame, private val actualFrame: Frame) :
+    KtFunction(ParameterSpec("Obj.letReturns", listOf("item"))) {
+    var enabled = true
+
+    override fun accept(callContext: KtCallContext): FlObject? {
+        if (!enabled) {
+            throwObj("disabled use of return from function", SyntaxError)
+            return null
+        }
+
+        val item = callContext.getLocal("item") ?: return null
+        actualFrame.returnBuffer = item
+        escapeFrame.returnBuffer = item
+        return Null
+    }
+}
 
 object BuiltinFunObjLet : KtFunction(ParameterSpec("Obj.let", listOf("lambda"))) {
     override fun accept(callContext: KtCallContext): FlObject? {
         val self = callContext.getObjContext() ?: return null
         val lambda = callContext.getLocalOfType("lambda", FlCodeObj::class) ?: return null
-        return lambda.callLetting(mapOf(Pair("it", self)))
+
+        val letFrame = lambda.getFrame()
+
+        val peekCall = peekCall() ?: return null
+        val letReturns = BuiltinFunObjLetReturns(peekCall, letFrame)
+
+        letFrame.locals.setAll(mapOf(Pair("it", self), Pair("returns", FlBuiltinObj(letReturns))))
+
+        val result = execute(letFrame)
+
+        letReturns.enabled = false
+
+        return result.result
     }
 }
 
 
 class SubjectNameTable(name: String, superTable: NameTable?, context: FlObject) : NameTable(name, superTable, context) {
-    override fun getOrDefault(name: String, default: FlObject?): FlObject? {
+    override fun getOrDefault(name: String, default: FlObject?, checkBuiltins: Boolean): FlObject? {
         getContextObjOrNull()?.getAttributeOrNull(name)?.let { return it }
-        return super.getOrDefault(name, default)
+        return super.getOrDefault(name, default, checkBuiltins)
     }
 }
 
@@ -100,7 +123,12 @@ object BuiltinFunObjLetContext : KtFunction(ParameterSpec("Obj.let", listOf("lam
     override fun accept(callContext: KtCallContext): FlObject? {
         val self = callContext.getObjContext() ?: return null
         val lambda = callContext.getLocalOfType("lambda", FlCodeObj::class) ?: return null
-        val frame = OperationalFrame(lambda.name, lambda.operations, closure = SubjectNameTable(lambda.name, lambda.nativeClosure, self), filePath = lambda.filePath)
+        val frame = OperationalFrame(
+            lambda.name,
+            lambda.operations,
+            closure = SubjectNameTable(lambda.name, lambda.nativeClosure, self),
+            filePath = lambda.filePath
+        )
         return execute(frame).result
     }
 }
@@ -152,9 +180,13 @@ object BuiltinFunObjExplicitCall : KtFunction(ParameterSpec("Obj.explicitCall", 
     }
 }
 
-class ErrWrapperNew(private val cls: FlClass, private val replacement: String? = null) : KtFunction(ParameterSpec("new")) {
+class ErrWrapperNew(private val cls: FlClass, private val replacement: String? = null) :
+    KtFunction(ParameterSpec("new")) {
     override fun accept(callContext: KtCallContext): FlObject? {
-        throwObj("%s type objects can't be created through constructor%s".format(cls.name, replacement ?. let { ", use '$it' instead" } ?: ""), TypeError)
+        throwObj(
+            "%s type objects can't be created through constructor%s".format(
+                cls.name,
+                replacement?.let { ", use '$it' instead" } ?: ""), TypeError)
         return null
     }
 }

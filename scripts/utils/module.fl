@@ -2,3 +2,8 @@ val general = import("iterable") .export {
     val all = all
     val any = any
 }
+
+import("#flamingo").export {
+    val main = isMain
+    val path = getPath
+}
